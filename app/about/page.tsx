@@ -1,121 +1,78 @@
 import PageShell from "@/components/PageShell";
 import Link from "next/link";
+import type { Metadata } from "next";
 
-const offerItems = [
-  "Chess learning support for beginners and junior players",
-  "Friendly weekly chess practice sessions",
-  "Opportunities for children and adults to play and improve",
-  "Guidance from experienced and competitive players",
-  "Junior chess events under the Junior Knights programme",
-  "Future club tournaments and community chess events",
-  "A pathway toward organising FIDE-rated tournaments in the future"
-];
+export const metadata: Metadata = {
+  title: "About Us | Howick-Pakuranga Chess Club",
+  description: "Discover HPCC’s history, junior chess tradition and club committee.",
+};
 
-const juniorItems = [
-  "Logical thinking",
-  "Patience and concentration",
-  "Confidence",
-  "Problem-solving skills",
-  "Respect for opponents",
-  "Tournament readiness"
+// Public club information from https://www.hpchessclub.org/about-us-1.
+const officers = [
+  { role: "President", name: "FM Martin Dreyer", email: "martin@dandd.co.nz" },
+  { role: "Secretary", name: "Winnie Ong", email: "hpchess.winnie@gmail.com" },
+  { role: "Treasurer", name: "Mathew Gosling", email: "matthew.gosling99@gmail.com" },
+  { role: "Club Captain", name: "Cigi Zhong", email: "zhongcigi@gmail.com" },
 ];
+const committee = [
+  "Tony Booth (Life Member)", "IO CM Paul Spiller MNZM", "Ludi Zhang",
+  "Bharat Somaraju", "Barry Hooton", "WCM Weiyang Yu", "FM Ewen Green (Life Member)",
+];
+const constitution = "https://www.hpchessclub.org/_files/ugd/138650_0582abb7b14d4ffab1af746819a0886c.pdf";
 
 export default function AboutPage() {
   return (
     <PageShell>
       <main className="container-page py-12">
-        <section className="overflow-hidden rounded-3xl bg-hpcc-blue text-white shadow-soft">
-          <div className="grid gap-8 p-8 lg:grid-cols-[1.6fr_1fr] lg:p-12">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-100">About Us</p>
-              <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">About Howick-Pakuranga Chess Club</h1>
-              <p className="mt-6 max-w-3xl text-lg leading-8 text-blue-50">
-                Howick-Pakuranga Chess Club is an incorporated society promoting chess in Howick and Pakuranga, welcoming junior and senior players across Auckland.
-              </p>
-              <p className="mt-4 max-w-3xl leading-8 text-blue-100">
-                The club has been inspired by CM Sai Vivan Karthikeya Somaraju, one of New Zealand’s talented young chess players, who wanted to create a friendly place where children and adults can learn, practise, improve, and enjoy chess together.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/join" className="btn-gold">Join Now</Link>
-                <Link href="/tournaments" className="rounded-md border border-white/30 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10">View Tournaments</Link>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-6">
-              <h2 className="text-2xl font-extrabold">Learn. Play. Improve. Compete.</h2>
-              <p className="mt-4 leading-7 text-blue-100">
-                Whether you are completely new to chess, returning after many years, or already playing in tournaments, Howick-Pakuranga Chess Club welcomes you.
-              </p>
-              <p className="mt-4 font-bold text-white">Become a Knight.</p>
-            </div>
+        <section className="rounded-3xl bg-stone-950 p-8 text-white shadow-soft lg:p-12">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-stone-300">About Us</p>
+          <h1 className="mt-3 max-w-4xl font-serif text-4xl sm:text-5xl">Howick-Pakuranga Chess Club</h1>
+          <p className="mt-5 text-xl text-stone-200">Learn. Play. Grow with HPCC.</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/join" className="rounded-md bg-white px-5 py-3 font-bold text-stone-950">Join the Club</Link>
+            <Link href="/tournaments" className="rounded-md border border-white/40 px-5 py-3 font-bold hover:bg-white/10">Explore Tournaments</Link>
           </div>
         </section>
 
-        <section className="mt-10 grid gap-6 lg:grid-cols-2">
-          <article className="card p-8">
-            <h2 className="text-3xl font-extrabold text-hpcc-navy">Our Goal</h2>
-            <p className="mt-4 leading-8 text-slate-700">
-              Our goal is to make chess more accessible to families and players in the local community. Whether you are completely new to chess, returning after many years, or already playing in tournaments, Howick-Pakuranga Chess Club welcomes you.
-            </p>
-            <p className="mt-4 leading-8 text-slate-700">
-              Sai will also share his chess learning experience, ideas, and practical tips with beginners and junior players. From time to time, he will help guide young players through weekly learning sessions, practice games, and chess improvement discussions.
-            </p>
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+          <article className="card p-7 lg:p-9">
+            <h2 className="font-serif text-3xl">Our History</h2>
+            <div className="mt-5 space-y-4 leading-8 text-stone-700">
+              <p>FM Richard Sutton founded Cockle Bay Chess Club in the late 1960s. After meeting in his home and local halls, the club eventually settled downstairs at Howick Bowling Club.</p>
+              <p>The Howick and Pakuranga clubs merged in 1975, creating today’s Howick-Pakuranga Chess Club. Tony Booth later succeeded Sutton as president.</p>
+              <p>The club’s weekend tournament began in 1977. Its Latvian tournament name honours member and benefactor Janis Borovskis.</p>
+              <p>HPCC hosted national championships in 1990, 1999/2000, 2019 and 2025, alongside junior, interschool, senior and women’s events.</p>
+            </div>
           </article>
-          <article className="card p-8">
-            <h2 className="text-3xl font-extrabold text-hpcc-navy">Our Vision</h2>
-            <p className="mt-4 leading-8 text-slate-700">
-              To build a strong and supportive chess community in Howick and Pakuranga, where children, families, and adults can develop their chess skills, confidence, discipline, and sportsmanship.
-            </p>
+          <article className="card p-7 lg:p-9">
+            <h2 className="font-serif text-3xl">Junior Chess</h2>
+            <p className="mt-5 leading-8 text-stone-700">Sutton’s junior teaching tradition continues. Former juniors WIM Jasmine Zhang, FM Luke Li and FM Daniel Gong represented New Zealand at Olympiads.</p>
+            <Link href="/coaching" className="btn-secondary mt-6">Explore Coaching</Link>
           </article>
         </section>
 
-        <section className="mt-10 card p-8">
-          <h2 className="text-3xl font-extrabold text-hpcc-navy">What We Offer</h2>
-          <p className="mt-3 text-slate-700">Howick-Pakuranga Chess Club aims to provide:</p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {offerItems.map((item) => (
-              <div key={item} className="rounded-2xl border border-slate-200 bg-hpcc-pale p-5">
-                <div className="text-2xl text-hpcc-blue">♞</div>
-                <p className="mt-3 font-semibold text-slate-800">{item}</p>
-              </div>
+        <section className="mt-10" aria-labelledby="committee-title">
+          <h2 id="committee-title" className="font-serif text-3xl">Our Committee</h2>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {officers.map(officer => (
+              <article key={officer.role} className="card p-6">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500">{officer.role}</h3>
+                <p className="mt-3 text-lg font-bold">{officer.name}</p>
+                <a href={`mailto:${officer.email}`} className="mt-3 block break-words text-sm underline underline-offset-4">{officer.email}</a>
+              </article>
             ))}
           </div>
-        </section>
-
-        <section className="mt-10 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-          <article className="card p-8">
-            <h2 className="text-3xl font-extrabold text-hpcc-navy">Junior Knights Programme</h2>
-            <p className="mt-4 leading-8 text-slate-700">
-              The Junior Knights programme will focus on helping young players learn chess in a structured, friendly, and encouraging environment. The aim is to support children from beginner level through to competitive tournament play.
-            </p>
-          </article>
-          <article className="card p-8">
-            <h3 className="text-2xl font-extrabold text-hpcc-navy">Junior players will be encouraged to develop</h3>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {juniorItems.map((item) => (
-                <div key={item} className="rounded-xl border border-slate-200 p-4 font-semibold text-slate-700">{item}</div>
-              ))}
-            </div>
+          <article className="card mt-5 p-7">
+            <h3 className="font-serif text-2xl">Additional Committee Members</h3>
+            <ul className="mt-4 grid list-inside list-disc gap-3 text-stone-700 sm:grid-cols-2 lg:grid-cols-3">
+              {committee.map(name => <li key={name}>{name}</li>)}
+            </ul>
           </article>
         </section>
 
-        <section className="mt-10 grid gap-6 lg:grid-cols-2">
-          <article className="card p-8">
-            <h2 className="text-3xl font-extrabold text-hpcc-navy">Our Future Plans</h2>
-            <p className="mt-4 leading-8 text-slate-700">
-              As the club grows, Howick-Pakuranga Chess Club plans to organise regular events, junior competitions, training sessions, and eventually FIDE-rated tournaments to give local players more opportunities to compete and improve.
-            </p>
-            <p className="mt-4 leading-8 text-slate-700">
-              We believe Howick and Pakuranga have many talented young players and chess-interested families. Howick-Pakuranga Chess Club wants to provide a local platform for these players to learn, connect, and grow.
-            </p>
-          </article>
-          <article className="rounded-3xl bg-white p-8 shadow-soft ring-1 ring-slate-200">
-            <h2 className="text-3xl font-extrabold text-hpcc-navy">Join Us</h2>
-            <p className="mt-4 leading-8 text-slate-700">
-              Whether you are a parent looking for chess opportunities for your child, a beginner wanting to learn, or an adult who enjoys the game, Howick-Pakuranga Chess Club is here to welcome you.
-            </p>
-            <p className="mt-5 text-2xl font-extrabold text-hpcc-blue">Learn. Play. Improve. Compete. Become a Knight.</p>
-            <Link href="/join" className="btn-primary mt-6">Join Now</Link>
-          </article>
+        <section className="card mt-8 flex flex-wrap items-center justify-between gap-5 p-7">
+          <h2 className="font-serif text-2xl">Club Constitution</h2>
+          <a href={constitution} target="_blank" rel="noopener noreferrer" className="btn-secondary">Read Constitution (PDF, opens in a new tab)</a>
         </section>
       </main>
     </PageShell>
