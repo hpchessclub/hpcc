@@ -3,13 +3,12 @@ import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 
 export default function Hero() {
-  return <section className="relative overflow-hidden bg-hpcc-pale text-hpcc-navy">
-    <div className="absolute inset-0 hpcc-banner-board" aria-hidden="true" />
-    <div className="absolute inset-y-0 right-0 w-full md:w-[55%]" aria-hidden="true">
-      <Image src="/images/hpcc-king-4k.jpg" alt="" fill priority sizes="(min-width: 768px) 55vw, 100vw" className="object-cover object-[78%_center] [mask-image:linear-gradient(to_right,transparent,black_22%)]" />
+  return <section className="relative overflow-hidden bg-hpcc-pale text-hpcc-navy md:aspect-[3/1] md:flex md:items-center">
+    <div className="absolute inset-0" aria-hidden="true">
+      <Image src="/images/hpcc-king-wide.jpg" alt="" fill priority sizes="100vw" className="object-cover object-right md:object-center" />
     </div>
-    <div className="absolute inset-0 bg-gradient-to-r from-hpcc-pale/90 via-hpcc-pale/75 to-transparent md:via-hpcc-pale/20" aria-hidden="true" />
-    <div className="container-page relative grid gap-6 py-7 md:grid-cols-[1.1fr_1fr] md:items-center lg:py-9">
+    <div className="absolute inset-0 bg-gradient-to-r from-hpcc-pale/90 via-hpcc-pale/60 to-transparent md:from-hpcc-pale/35 md:via-transparent" aria-hidden="true" />
+    <div className="container-page relative w-full grid gap-6 py-7 md:grid-cols-[1.1fr_1fr] md:items-center lg:py-9">
       <div className="relative max-w-md">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-hpcc-blue">Howick-Pakuranga Chess Club · East Auckland</p>
         <h1 className="mt-4 hpcc-display text-3xl font-bold leading-[1.15] tracking-tight md:text-4xl lg:text-[2.75rem]">Learn. Play. Grow<br/><span className="text-hpcc-blue">with HPCC.</span></h1>

@@ -51,10 +51,3 @@ body { background: #F7FBF4; color: #244A2C; }
   font-family: Georgia, "Times New Roman", serif;
   letter-spacing: normal;
 }
-
-/* A continuous light-green chessboard spans the entire home banner. */
-.hpcc-banner-board {
-  background-color: #E7F1DF;
-  background-image: conic-gradient(#AAC49B 25%, #E7F1DF 0 50%, #AAC49B 0 75%, #E7F1DF 0);
-  background-size: 110px 110px;
-}
