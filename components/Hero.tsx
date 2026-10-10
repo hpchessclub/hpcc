@@ -3,8 +3,8 @@ import { ArrowUpRight } from "lucide-react";
 
 export default function Hero() {
   return <section className="relative overflow-hidden bg-[#111111] text-white">
-    <div className="absolute inset-0 bg-[url('/images/hpcc-modern-hero.jpg')] bg-cover bg-[70%_center] grayscale" aria-hidden="true" />
-    <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/10" aria-hidden="true" />
+    <div className="absolute inset-0 bg-[url('/images/hpcc-silver-hero.jpg')] bg-cover bg-[75%_center] lg:bg-center" aria-hidden="true" />
+    <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/75 to-black/20 lg:from-black/85 lg:via-black/35 lg:to-transparent" aria-hidden="true" />
     <div className="container-page relative grid gap-12 py-16 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:py-28">
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#E3E5E4]">Howick-Pakuranga Chess Club · East Auckland</p>
