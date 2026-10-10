@@ -21,6 +21,9 @@ function valuesFor(m: any, customMessage = "") {
     membership_status: m.membership_status || "",
     club_name: "Howick-Pakuranga Chess Club",
     message: customMessage,
+    registration_id: m.registration_id || "",
+    category_name: m.category_name || "",
+    entry_fee: m.entry_fee_cents == null ? "" : `$${(Number(m.entry_fee_cents)/100).toFixed(2)}`,
   };
 }
 function normalise(value: any) { return String(value || "").trim().toLowerCase(); }
@@ -66,17 +69,17 @@ export async function POST(req: Request) {
   const needsTournament = /{{\s*tournament_(name|title)\s*}}/.test(`${template.subject} ${template.body}`) || ["calendar_registration","general_tournament_paid"].includes(template.template_key);
   let tournament: any = null;
   if (needsTournament && body.tournament_id) {
-    const {data:event,error:eventError} = await s.from("tournaments").select("id,title").eq("id", body.tournament_id).maybeSingle();
+    const {data:event,error:eventError} = await s.from("tournaments").select("*").eq("id", body.tournament_id).maybeSingle();
     if (eventError || !event) return NextResponse.json({error:"Selected tournament could not be loaded."}, {status:400});
     tournament = event;
-    const {data:registrations,error:registrationError} = await s.from("tournament_registrations").select("id,first_name,last_name,email,payment_status,registration_status,category_name,entry_fee_cents").eq("tournament_id", event.id).eq("payment_status","paid").eq("registration_status","confirmed");
+    const {data:registrations,error:registrationError} = await s.from("tournament_registrations").select("id,first_name,last_name,email,payment_status,registration_status,category_name,entry_fee_cents").eq("tournament_id", event.id).in("payment_status",["paid","manual_paid"]).eq("registration_status","confirmed");
     if (registrationError) return NextResponse.json({error:"Tournament registrations could not be loaded."}, {status:400});
     recipients = tournamentEmailRecipients(recipients, registrations || []);
   }
   if (needsTournament && !tournament && action === "send") return NextResponse.json({error:"Select a tournament and preview the email before sending."}, {status:400});
-  const eventValues = tournament ? {tournament_name:tournament.title,tournament_title:tournament.title} : {};
+  const eventValues = tournament ? {tournament_name:tournament.title,tournament_title:tournament.title,tournament_date:tournament.start_date || "",tournament_venue:tournament.venue_name || tournament.venue || "",tournament_address:tournament.venue_address || ""} : {};
   const first = recipients[0];
-  const sampleValues: Record<string, any> = {...eventValues, ...(first ? valuesFor(first, body.custom_message) : { first_name: "Bharat", full_name: "Bharat Somaraju", membership_id: "AK01001", membership_end_date: "31 Dec", message: body.custom_message || "" })};
+  const sampleValues: Record<string, any> = {...eventValues, ...(first ? valuesFor(first, body.custom_message) : { first_name: "Sample", full_name: "Sample Player", membership_id: "HPCC-SAMPLE", membership_end_date: "Sample expiry", message: body.custom_message || "" })};
   const missing = missingEmailValues(`${template.subject}\n${template.body}`, sampleValues);
   if (action === "send" && missing.length) return NextResponse.json({error:`This template requires ${missing.join(", ")}, which are unavailable for the selected recipients. Select the matching event or use a member notice template.`}, {status:400});
   if (action !== "send") for (const key of missing) (sampleValues as Record<string, any>)[key] = `[Sample ${key.replace(/_/g, " ")}]`;
@@ -102,6 +105,12 @@ export async function POST(req: Request) {
     }
   }
 
+  for (const recipient of recipients) {
+    const values = {...valuesFor(recipient, body.custom_message), ...eventValues};
+    const required = [...(`${template.subject} ${template.body}`).matchAll(/{{\s*([a-zA-Z0-9_]+)\s*}}/g)].map(m => m[1]);
+    const unavailable = required.filter(key => key !== "message" && (values[key as keyof typeof values] == null || String(values[key as keyof typeof values]).trim() === ""));
+    if (unavailable.length) return NextResponse.json({error:`Required email details are missing: ${[...new Set(unavailable)].join(", ")}. Update the template or recipient details and preview again.`},{status:400});
+  }
   const emailStatus = await getEmailProviderStatus();
   if (!emailStatus.configured) {
     return NextResponse.json({

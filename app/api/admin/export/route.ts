@@ -4,7 +4,7 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { canAccess } from "@/lib/roles";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { toCsv } from "@/lib/csv";
-import { selectedColumnKeys, rowsForColumns, type ReportType } from "@/lib/reports";
+import { PLAYER_REPORT_COLUMNS, selectedColumnKeys, rowsForColumns, type ReportType } from "@/lib/reports";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,6 +27,7 @@ async function getRows(type: ReportType, role: string, params: FilterParams) {
     if (paymentStatus) q = q.eq("payment_status", paymentStatus);
     if (membershipType) q = q.contains("membership_options", [{ key: membershipType }]);
     if (sort === "name") q = q.order("last_name").order("first_name");
+    else if (sort === "name") q = q.order("last_name").order("first_name");
     else if (sort === "nzcf_desc") q = q.order("nzcf_rating", { ascending: false, nullsFirst: false });
     else if (sort === "nzcf_asc") q = q.order("nzcf_rating", { ascending: true, nullsFirst: false });
     else if (sort === "fide_desc") q = q.order("fide_rating", { ascending: false, nullsFirst: false });
@@ -41,9 +42,11 @@ async function getRows(type: ReportType, role: string, params: FilterParams) {
     const tournamentId = params.get("tournament_id");
     const paymentStatus = params.get("payment_status");
     const sort = params.get("sort") || "created_at_desc";
+    if (params.get("report") === "players" && params.get("entries") !== "all") q = q.in("payment_status", ["paid", "manual_paid"]).eq("registration_status", "confirmed");
     if (tournamentId) q = q.eq("tournament_id", tournamentId);
     if (paymentStatus) q = q.eq("payment_status", paymentStatus);
-    if (sort === "nzcf_desc") q = q.order("nzcf_rating", { ascending: false, nullsFirst: false });
+    if (sort === "name") q = q.order("last_name").order("first_name");
+    else if (sort === "nzcf_desc") q = q.order("nzcf_rating", { ascending: false, nullsFirst: false });
     else if (sort === "fide_desc") q = q.order("fide_rating", { ascending: false, nullsFirst: false });
     else q = q.order("created_at", { ascending: false });
     const rows = (await q).data || [];
@@ -143,9 +146,9 @@ export async function GET(req: Request) {
   const preview = url.searchParams.get("preview") === "1";
   try {
     const rows = await getRows(type, admin.profile.role, url.searchParams);
-    const keys = selectedColumnKeys(url.searchParams.get("columns"), type);
+    const keys = type === "tournament_registrations" && url.searchParams.get("report") === "players" ? PLAYER_REPORT_COLUMNS : selectedColumnKeys(url.searchParams.get("columns"), type);
     const shaped = rowsForColumns(rows as any[], type, keys);
-    const filename = safeFileName(type);
+    const filename = url.searchParams.get("report") === "players" && type === "tournament_registrations" ? "tournament-players" : safeFileName(type);
     if (format === "pdf") {
       const pdf = makePdf(reportTitle(type), shaped as Record<string, any>[]);
       return new NextResponse(new Uint8Array(pdf), { headers: { "Content-Type": "application/pdf", "Content-Disposition": `${preview ? "inline" : "attachment"}; filename="${filename}.pdf"`, "Cache-Control": "no-store" } });
