@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-hpcc-navy: #17351F;
-  --color-hpcc-blue: #243F2C;
-  --color-hpcc-royal: #17351F;
-  --color-hpcc-accent: #A7CC92;
-  --color-hpcc-pale: #F4F8F1;
-  --color-hpcc-gold: #A7CC92;
+  --color-hpcc-navy: #171717;
+  --color-hpcc-blue: #262626;
+  --color-hpcc-royal: #171717;
+  --color-hpcc-accent: #DDE0DE;
+  --color-hpcc-pale: #FAFAF9;
+  --color-hpcc-gold: #DDE0DE;
   --shadow-soft: 0 14px 45px rgb(0 0 0 / 0.12);
 }
 
 :root {
-  --hpcc-navy: #17351F;
-  --hpcc-blue: #243F2C;
-  --hpcc-accent: #A7CC92;
-  --hpcc-gold: #A7CC92;
-  --hpcc-pale: #F4F8F1;
+  --hpcc-navy: #171717;
+  --hpcc-blue: #262626;
+  --hpcc-accent: #DDE0DE;
+  --hpcc-gold: #DDE0DE;
+  --hpcc-pale: #FAFAF9;
 }
 
 html { scroll-behavior: smooth; }
-body { background: #f4f8f1; color: #243F2C; }
+body { background: #fafaf9; color: #262626; }
 
 .chessboard-subtle {
   background-image:

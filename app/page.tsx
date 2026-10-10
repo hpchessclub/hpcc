@@ -25,15 +25,23 @@ export default async function HomePage() {
 
   return <PageShell>
     <Hero />
-    <FeatureStrip />
+
     <main className="container-page py-10">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl bg-stone-100 p-5"><p className="font-bold">Join the club, find your member record or renew membership.</p><Link href="/join#membership-search" className="btn-primary">Join Now / Find Member</Link></div>
-      <div className="grid gap-8 lg:grid-cols-3">
+      <section className="mb-12" aria-labelledby="programmes-heading">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Play. Learn. Belong.</p><h2 id="programmes-heading" className="mb-6 mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">Find your place in the game.</h2>
+        <div className="grid overflow-hidden rounded-2xl md:grid-cols-3">
+          <article className="bg-[#171717] p-8 text-white md:p-9"><span className="text-6xl text-stone-300" aria-hidden="true">♞</span><p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Your club</p><h3 className="mt-3 text-3xl font-extrabold">Club Chess</h3><p className="mt-4 leading-7 text-white/80">Join a community of chess players. Explore membership, coaching and club events at HPCC.</p><Link href="/join" className="mt-7 inline-flex rounded-full border border-white/40 px-5 py-3 text-sm font-bold hover:bg-white/10">Explore membership ↗</Link></article>
+          <article id="interschool-chess" className="scroll-mt-24 bg-[#E3E5E4] p-8 md:p-9"><span className="text-6xl text-stone-700" aria-hidden="true">♜</span><p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-stone-600">For schools</p><h3 className="mt-3 text-3xl font-extrabold">Interschool Chess</h3><p className="mt-4 leading-7 text-stone-700">Bring your school into the game. Ask about school chess events, team participation and opportunities for students.</p><Link href="/contact?programme=interschool" className="mt-7 inline-flex rounded-full border border-black/30 px-5 py-3 text-sm font-bold hover:bg-white/50">School enquiries ↗</Link></article>
+          <article id="poppy-chess" className="scroll-mt-24 bg-[#F5F5F4] p-8 md:p-9"><span className="text-6xl text-stone-600" aria-hidden="true">♟</span><p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Our community</p><h3 className="mt-3 text-3xl font-extrabold">Poppy Chess</h3><p className="mt-4 leading-7 text-stone-700">Connect through chess. Get in touch for information about Poppy Chess activities and ways to take part.</p><Link href="/contact?programme=poppy-chess" className="mt-7 inline-flex rounded-full border border-black/30 px-5 py-3 text-sm font-bold hover:bg-white">Discover Poppy Chess ↗</Link></article>
+        </div>
+      </section>
+      <FeatureStrip />
+      <div className="mt-12 grid gap-8 lg:grid-cols-3">
         <section className="lg:col-span-2">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-extrabold uppercase tracking-wide">Upcoming Public Tournaments</h2>
-              <p className="mt-1 text-sm text-stone-600">General/open tournaments and paid public events. Club calendar events are listed under Calendar and Tournaments.</p>
+              <h2 className="text-2xl font-extrabold uppercase tracking-wide">Upcoming tournaments</h2>
+              <p className="mt-1 text-sm text-stone-600">Discover public events. Visit the calendar for club activities and member events.</p>
             </div>
             <Link href="/tournaments" className="shrink-0 text-sm font-bold text-black">View All</Link>
           </div>
@@ -54,11 +62,12 @@ export default async function HomePage() {
         </section>
       </div>
       <section className="mt-10"><div className="flex items-center justify-between gap-4"><h2 className="text-2xl font-extrabold">Event Photo Gallery</h2><Link href="/photo-gallery" className="font-bold">View All Events</Link></div>{galleryPhotos?.length ? <GalleryAlbums albums={galleryAlbums(galleryPhotos).slice(0, 3)} /> : <p className="card mt-5 p-5 text-stone-600">Event albums will appear here when photos are published.</p>}</section>
+      <section className="mt-12 flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-[#171717] p-8 text-white md:p-12"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Make your next move</p><h2 className="mt-3 text-3xl font-extrabold">Chess brings us together.</h2><p className="mt-3 text-white/75">Find your member record, renew or become part of HPCC.</p></div><Link href="/join#membership-search" className="rounded-full bg-white px-6 py-3 font-bold text-black">Join our community ↗</Link></section>
       <section className="mt-10 grid gap-6 lg:grid-cols-2">
         <div className="card p-6">
           <h2 className="text-2xl font-extrabold">Find Us</h2>
           <p className="mt-3 text-stone-700">{mapAddress}</p>
-          <p className="mt-3 text-sm text-stone-500">The map updates automatically from the Club Settings address.</p>
+          <p className="mt-3 text-sm text-stone-500">Visit us in East Auckland. Contact the club for session details before your first visit.</p>
           <Link href="/contact" className="btn-secondary mt-5">Contact Us</Link>
         </div>
         <div className="card overflow-hidden">

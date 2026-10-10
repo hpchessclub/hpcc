@@ -5,12 +5,12 @@ const config: Config = {
     extend: {
       colors: {
         hpcc: {
-          navy: "#17351F",
-          blue: "#436F38",
-          royal: "#598F47",
-          accent: "#598F47",
-          pale: "#F4F8F1",
-          gold: "#A7CC92"
+          navy: "#171717",
+          blue: "#444444",
+          royal: "#555555",
+          accent: "#555555",
+          pale: "#FAFAF9",
+          gold: "#DDE0DE"
         }
       },
       boxShadow: { soft: "0 14px 45px rgba(6,19,34,0.12)" }
