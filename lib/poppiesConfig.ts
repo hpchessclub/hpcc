@@ -24,7 +24,7 @@ Chess Aotearoa invited supporters to help New Zealand’s Chess Olympiad teams t
 
 For enquiries or preorders, the poster listed Weiyang at [chessmagnominations@gmail.com](mailto:chessmagnominations@gmail.com).
 
-These are the advertised 2026 event details; future editions will be announced separately.`,results:"",resultsUrl:""}]
+These are the advertised 2026 event details; future editions will be announced separately.`,results:"## 2026 match result\n\nCM Leo Baker won the six-game challenge **4½–1½** against WFM Sarah Sun, WCM Luna Lu and WCM Weiyang Yu.\n\nSarah Sun was undefeated against Leo, scoring one win and one draw.\n\nThe actual participants differed from the advance poster’s advertised lineup.\n\nThank you to Poppies Bookstore for hosting the annual event.\n\n[View the NZCF match report and event photo album](https://www.facebook.com/NewZealandChessFederation/posts/on-saturday-we-gathered-at-poppies-bookstore-for-the-annual-poppies-chess-challe/1349917040684226/)\n\nPhotographs credited by NZCF to **Weiyang Yu and Hao Yu**.",resultsUrl:"https://www.facebook.com/NewZealandChessFederation/posts/on-saturday-we-gathered-at-poppies-bookstore-for-the-annual-poppies-chess-challe/1349917040684226/"}]
 };
 export function validatePoppiesConfig(input: unknown): PoppiesConfig {
  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Invalid settings.");
