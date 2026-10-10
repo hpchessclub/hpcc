@@ -45,3 +45,9 @@ body { background: #fafaf9; color: #262626; }
   .prose-club h2 { @apply mt-8 mb-3 text-2xl font-bold text-hpcc-navy; }
   .prose-club h3 { @apply mt-6 mb-2 text-xl font-bold text-hpcc-navy; }
 }
+
+/* Serif display typography matched to the HPCC wordmark reference. */
+.hpcc-display, .hpcc-home h2, .hpcc-home h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: normal;
+}

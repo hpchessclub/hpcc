@@ -26,7 +26,7 @@ export default async function HomePage() {
   return <PageShell>
     <Hero />
 
-    <main className="container-page py-10">
+    <main className="hpcc-home container-page py-10">
       <section className="mb-12" aria-labelledby="programmes-heading">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Play. Learn. Belong.</p><h2 id="programmes-heading" className="mb-6 mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">Find your place in the game.</h2>
         <div className="grid overflow-hidden rounded-2xl md:grid-cols-3">

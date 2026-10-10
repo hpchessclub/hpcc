@@ -58,8 +58,8 @@ export default async function PublicHeader() {
         <Link href="/" className="flex min-w-0 shrink-0 items-center gap-3 sm:gap-4">
           <Image src="/logo.png" alt="Howick-Pakuranga Chess Club" width={96} height={96} priority className="h-14 w-14 rounded-md bg-white p-1 object-contain shadow-sm sm:h-[72px] sm:w-[72px]" />
           <div className="leading-tight">
-            <div className="text-lg font-black uppercase tracking-wide text-black sm:text-2xl lg:text-[1.65rem]">Howick-Pakuranga</div>
-            <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.28em] text-black sm:text-sm sm:tracking-[0.32em]">Chess Club</div>
+            <div className="hpcc-display text-lg font-bold tracking-normal text-black sm:text-2xl lg:text-[1.65rem]">Howick-Pakuranga</div>
+            <div className="hpcc-display mt-0.5 text-sm font-normal tracking-normal text-black sm:text-base">Chess Club</div>
           </div>
         </Link>
         <nav className="hidden flex-1 items-center justify-end gap-4 lg:flex xl:gap-5">
