@@ -18,6 +18,7 @@ export default async function UpcomingClubTournaments() {
         <h4 className="mt-2 text-lg font-bold">{event.title}</h4>
         <p className="mt-3 text-sm font-semibold">{event.date}</p>
         {records?.some(record => record.slug === event.slug && record.status === "open" && record.allow_public_registration) && <Link href={`/tournaments/${event.slug}/register`} className="btn-primary mt-4 mr-2 py-2">Register</Link>}
+        <Link href={`/absence?tournament=${encodeURIComponent(event.title)}`} aria-label={`Report absence for ${event.title}`} className="btn-secondary mt-4 mr-2 py-2">Report absence</Link>
         {event.vega ? <a href={event.vega} target="_blank" rel="noopener noreferrer" className="btn-secondary mt-4 py-2">Vega players, pairings & results ↗</a> : <p className="mt-4 text-sm text-stone-600">The Vega link will appear once available.</p>}
       </article>)}
     </div>
