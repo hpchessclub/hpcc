@@ -1,6 +1,7 @@
 // Tournament data is managed in admin and must be read on every request.
 export const dynamic = "force-dynamic";
 
+import { mergeHpccNews } from "@/lib/hpccNewsAnnouncements";
 import GalleryAlbums from "@/components/GalleryAlbums";
 import { galleryAlbums } from "@/lib/gallery";
 import PageShell from "@/components/PageShell";
@@ -15,12 +16,13 @@ import { formatDate } from "@/lib/format";
 
 export default async function HomePage() {
   const service = createSupabaseServiceClient();
-  const [{ data: tournaments }, { data: news }, { data: settings }, { data: galleryPhotos }] = await Promise.all([
+  const [{ data: tournaments }, { data: storedNews }, { data: settings }, { data: galleryPhotos }] = await Promise.all([
     service.from("tournaments").select("*").eq("tournament_type", "general_open").in("status", ["open", "closed"]).order("start_date", { ascending: true }).limit(9),
-    service.from("news_posts").select("*").eq("is_published", true).order("published_at", { ascending: false }).limit(3),
+    service.from("news_posts").select("*").order("published_at", { ascending: false }),
     service.from("club_settings").select("*").eq("id", "default").maybeSingle(),
     service.from("gallery_photos").select("*").eq("is_published", true).order("event_date", { ascending: false }).order("created_at", { ascending: false })
   ]);
+  const news = mergeHpccNews(storedNews || []).slice(0, 3);
   const mapAddress = settings?.club_address || "East Auckland, New Zealand";
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapAddress)}&output=embed`;
 

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+import { hpccNewsAnnouncements } from "@/lib/hpccNewsAnnouncements";
 import MeetingSummary from "@/components/MeetingSummary";
 import PageShell from "@/components/PageShell";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -7,7 +9,9 @@ import { formatDate } from "@/lib/format";
 export default async function NewsDetail({ params }: { params: Promise<{slug:string}> }) {
   const { slug } = await params;
   const service = createSupabaseServiceClient();
-  const { data:n } = await service.from("news_posts").select("*").eq("slug", slug).eq("is_published", true).maybeSingle();
+  const { data:stored } = await service.from("news_posts").select("*").eq("slug", slug).maybeSingle();
+  if (stored?.is_published === false) notFound();
+  const n = stored || hpccNewsAnnouncements.find(item => item.slug === slug);
   if(!n) notFound();
   const site = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const url = `${site}/news/${n.slug}`;
