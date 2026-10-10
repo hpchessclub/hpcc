@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hpcc-navy: #17351F;
+  --color-hpcc-blue: #243F2C;
+  --color-hpcc-royal: #17351F;
+  --color-hpcc-accent: #A7CC92;
+  --color-hpcc-pale: #F4F8F1;
+  --color-hpcc-gold: #A7CC92;
+  --shadow-soft: 0 14px 45px rgb(0 0 0 / 0.12);
+}
+
+:root {
+  --hpcc-navy: #17351F;
+  --hpcc-blue: #243F2C;
+  --hpcc-accent: #A7CC92;
+  --hpcc-gold: #A7CC92;
+  --hpcc-pale: #F4F8F1;
+}
+
+html { scroll-behavior: smooth; }
+body { background: #f4f8f1; color: #243F2C; }
+
+.chessboard-subtle {
+  background-image:
+    linear-gradient(45deg, rgba(0,0,0,.035) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(0,0,0,.035) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(0,0,0,.035) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(0,0,0,.035) 75%);
+  background-size: 28px 28px;
+  background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
+}
+
+@layer components {
+  .container-page { @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8; }
+  .card { @apply rounded-2xl border border-stone-200 bg-white shadow-soft; }
+  .btn-primary { @apply inline-flex items-center justify-center rounded-md bg-hpcc-navy px-5 py-3 text-sm font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-secondary { @apply inline-flex items-center justify-center rounded-md border border-hpcc-navy bg-white px-5 py-3 text-sm font-bold text-hpcc-navy transition hover:bg-stone-100; }
+  .btn-gold { @apply inline-flex items-center justify-center rounded-md bg-hpcc-gold px-5 py-3 text-sm font-bold text-black transition hover:brightness-110; }
+  .input { @apply w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-hpcc-gold focus:ring-2 focus:ring-hpcc-gold/20; }
+  .label { @apply text-sm font-semibold text-stone-700; }
+  .admin-label { @apply text-xs font-bold uppercase tracking-wide text-stone-600; }
+  .admin-input { @apply w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-hpcc-gold focus:outline-none focus:ring-2 focus:ring-hpcc-gold/20; }
+  .prose-club p { @apply mb-4 leading-7 text-stone-700; }
+  .prose-club h2 { @apply mt-8 mb-3 text-2xl font-bold text-hpcc-navy; }
+  .prose-club h3 { @apply mt-6 mb-2 text-xl font-bold text-hpcc-navy; }
+}
