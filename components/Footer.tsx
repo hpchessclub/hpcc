@@ -9,6 +9,7 @@ const quickLinks = [
   ["/agm", "AGM & Notices"],
   ["/links", "Links"],
   ["/calendar", "Calendar"],
+  ["/club-nights", "Club Nights"],
   ["/absence", "Report Absence"],
   ["/tournaments", "Tournaments"],
   ["/results", "Results"],
