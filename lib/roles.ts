@@ -28,7 +28,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 export type AdminArea =
   | "dashboard" | "documentation" | "users" | "settings" | "news" | "tournaments" | "results"
   | "members" | "tournament_registrations" | "gallery" | "faq" | "coaching"
-  | "interschools" | "juniors" | "payment_accounts" | "agm" | "absences" | "payments" | "social_posts" | "live_boards"
+  | "poppies" | "interschools" | "juniors" | "payment_accounts" | "agm" | "absences" | "payments" | "social_posts" | "live_boards"
   | "membership_options" | "calendar" | "reports" | "enquiries" | "member_notices" | "email_templates" | "bulk_email" | "email_diagnostics";
 
 export const AREA_LABELS: Record<AdminArea, string> = {
@@ -46,6 +46,7 @@ export const AREA_LABELS: Record<AdminArea, string> = {
   coaching: "Coaching",
   juniors: "Junior Chess",
   interschools: "Interschool Chess",
+  poppies: "Poppies Chess Challenge",
   agm: "AGM & Notices",
   absences: "Absence Reports",
   payments: "Payments",

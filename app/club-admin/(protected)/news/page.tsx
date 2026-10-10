@@ -1,3 +1,4 @@
+import { POPPIES_CONFIG_SLUG } from "@/lib/poppiesConfig";
 import { INTERSCHOOL_CONFIG_SLUG } from "@/lib/interschoolConfig";
 import { JUNIOR_CONFIG_SLUG } from "@/lib/juniorConfig";
 import { requireAdmin } from "@/lib/auth";
@@ -8,7 +9,7 @@ import { canUseSocialMedia } from "@/lib/roles";
 export default async function NewsAdmin(){
   const admin = await requireAdmin("news");
   const s=createSupabaseServiceClient();
-  const {data}=await s.from("news_posts").select("*").neq("slug", JUNIOR_CONFIG_SLUG).neq("slug", INTERSCHOOL_CONFIG_SLUG).order("created_at",{ascending:false});
+  const {data}=await s.from("news_posts").select("*").neq("slug", JUNIOR_CONFIG_SLUG).neq("slug", INTERSCHOOL_CONFIG_SLUG).neq("slug", POPPIES_CONFIG_SLUG).order("created_at",{ascending:false});
   const fields:any[] = [
     {name:'title',label:'News title',required:true},
     {name:'slug',label:'Slug - optional, auto generated if blank'},

@@ -23,6 +23,7 @@ const items = [
   ["email_diagnostics", "/club-admin/email-diagnostics", "Email Diagnostics"],
   ["gallery", "/club-admin/photo-gallery", "Photo Gallery"],
   ["live_boards", "/club-admin/live-boards", "Live Boards"],
+  ["poppies", "/club-admin/poppies", "Poppies Chess Challenge"],
   ["interschools", "/club-admin/interschools", "Interschool Chess"],
   ["juniors", "/club-admin/juniors", "Junior Chess"],
   ["coaching", "/club-admin/coaching", "Coaching"],

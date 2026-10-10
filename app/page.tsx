@@ -1,6 +1,8 @@
 // Tournament data is managed in admin and must be read on every request.
 export const dynamic = "force-dynamic";
 
+import { getPoppiesSettings } from "@/lib/poppiesSettings";
+import { poppiesDefaults } from "@/lib/poppiesConfig";
 import { getInterschoolSettings } from "@/lib/interschoolSettings";
 import { interschoolDefaults } from "@/lib/interschoolConfig";
 import { mergeHpccNews } from "@/lib/hpccNewsAnnouncements";
@@ -17,6 +19,8 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { formatDate } from "@/lib/format";
 
 export default async function HomePage() {
+  let poppies = poppiesDefaults;
+  try { poppies = await getPoppiesSettings(); } catch {}
   let interschools = interschoolDefaults;
   try { interschools = await getInterschoolSettings(); } catch {}
   const service = createSupabaseServiceClient();
@@ -66,7 +70,7 @@ export default async function HomePage() {
         <div className="grid overflow-hidden rounded-2xl md:grid-cols-3">
           <article className="bg-hpcc-accent p-8 text-hpcc-navy md:p-9"><span className="text-6xl text-hpcc-blue" aria-hidden="true">♞</span><p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-hpcc-blue">Young players</p><h3 className="mt-3 text-3xl font-extrabold">Junior Chess</h3><p className="mt-4 leading-7 text-hpcc-navy/80">Learn chess, enjoy games and build confidence at our Tuesday Junior Hour. Explore lessons, the junior ladder and a pathway into club chess.</p><Link href="/juniors" className="mt-7 inline-flex rounded-full border border-hpcc-navy/30 px-5 py-3 text-sm font-bold hover:bg-white/10">Explore Junior Chess ↗</Link></article>
           <article id="interschool-chess" className="scroll-mt-24 bg-[#E6F3DF] p-8 md:p-9"><span className="text-6xl text-stone-700" aria-hidden="true">♜</span><p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-stone-600">For schools</p><h3 className="mt-3 text-3xl font-extrabold">Interschool Chess</h3><p className="mt-4 leading-7 text-stone-700">{interschools.cardText}</p><p className="mt-3 text-sm font-semibold text-stone-700">Primary · Intermediate · Secondary</p><Link href="/interschools" className="mt-7 inline-flex rounded-full border border-black/30 px-5 py-3 text-sm font-bold hover:bg-white/50">View interschool reports ↗</Link></article>
-          <article id="poppy-chess" className="scroll-mt-24 bg-hpcc-pale p-8 md:p-9"><span className="text-6xl text-stone-600" aria-hidden="true">♟</span><p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Our community</p><h3 className="mt-3 text-3xl font-extrabold">Poppy Chess</h3><p className="mt-4 leading-7 text-stone-700">Connect through chess. Get in touch for information about Poppy Chess activities and ways to take part.</p><Link href="/contact?programme=poppy-chess" className="mt-7 inline-flex rounded-full border border-black/30 px-5 py-3 text-sm font-bold hover:bg-white">Discover Poppy Chess ↗</Link></article>
+          <article id="poppy-chess" className="scroll-mt-24 bg-hpcc-pale p-8 md:p-9"><span className="text-6xl text-stone-600" aria-hidden="true">♟</span><p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Our community</p><h3 className="mt-3 text-3xl font-extrabold">{poppies.title}</h3><p className="mt-4 leading-7 text-stone-700">{poppies.cardText}</p><Link href="/poppies" className="mt-7 inline-flex rounded-full border border-black/30 px-5 py-3 text-sm font-bold hover:bg-white">View yearly events & results ↗</Link></article>
         </div>
       </section>
       <section className="mt-10"><div className="flex items-center justify-between gap-4"><h2 className="text-2xl font-extrabold">Event Photo Gallery</h2><Link href="/photo-gallery" className="font-bold">View All Events</Link></div>{galleryPhotos?.length ? <GalleryAlbums albums={galleryAlbums(galleryPhotos).slice(0, 3)} /> : <p className="card mt-5 p-5 text-stone-600">Event albums will appear here when photos are published.</p>}</section>
