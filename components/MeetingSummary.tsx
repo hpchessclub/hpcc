@@ -14,6 +14,7 @@ export default function MeetingSummary({ text }: { text: string }) {
       th: ({ children }) => <th className="border-b border-slate-200 bg-slate-100 px-4 py-3 font-bold">{children}</th>,
       td: ({ children }) => <td className="border-b border-slate-200 px-4 py-3 align-top">{children}</td>,
       a: ({ href, children }) => <a href={href} className="font-medium text-hpcc-blue underline underline-offset-2">{children}</a>,
+      img: ({ src, alt }) => <img src={src} alt={alt || ""} loading="lazy" className="my-4 h-auto max-h-[560px] max-w-full rounded-xl object-contain"/>,
       blockquote: ({ children }) => <blockquote className="border-l-4 border-hpcc-gold pl-4 italic">{children}</blockquote>,
     }}>{text || ""}</ReactMarkdown>
   </div>;
