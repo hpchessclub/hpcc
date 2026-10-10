@@ -1,6 +1,7 @@
 // Tournament data is managed in admin and must be read on every request.
 export const dynamic = "force-dynamic";
 
+import UpcomingClubTournaments from "@/components/UpcomingClubTournaments";
 import PageShell from "@/components/PageShell";
 import Link from "next/link";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -32,6 +33,7 @@ export default async function TournamentsPage() {
       <p className="mt-2 text-stone-700">See also <Link href="/calendar" className="font-semibold underline">Calendar</Link> for the full yearly list.</p>
 
       <div className="mt-10 space-y-12">
+        <UpcomingClubTournaments />
         {years.map((year) => <section key={year}>
           <h2 className="mb-6 text-3xl font-extrabold">{year} Tournaments</h2>
           <div className="space-y-9">
@@ -54,7 +56,7 @@ export default async function TournamentsPage() {
             </article>)}
           </div>
         </section>)}
-        {years.length===0 && <div className="rounded-xl bg-stone-50 p-6 text-stone-600">No current or upcoming tournaments have been published yet.</div>}
+        {years.length===0 && <div className="rounded-xl bg-stone-50 p-6 text-stone-600">Additional tournaments will appear here when published.</div>}
       </div>
     </div>
   </main></PageShell>

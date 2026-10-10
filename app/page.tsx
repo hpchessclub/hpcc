@@ -7,6 +7,7 @@ import PageShell from "@/components/PageShell";
 import Hero from "@/components/Hero";
 import FeatureStrip from "@/components/FeatureStrip";
 import StayConnected from "@/components/StayConnected";
+import UpcomingClubTournaments from "@/components/UpcomingClubTournaments";
 import HomeTournamentsList from "@/components/HomeTournamentsList";
 import Link from "next/link";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -37,7 +38,8 @@ export default async function HomePage() {
             </div>
             <Link href="/tournaments" className="shrink-0 text-sm font-bold text-black">View All</Link>
           </div>
-          {(tournaments || []).length > 0 ? <HomeTournamentsList tournaments={tournaments || []} /> : <div className="card p-5 text-sm text-stone-600">No public tournaments are published yet.</div>}
+          <UpcomingClubTournaments />
+          {(tournaments || []).length > 0 ? <HomeTournamentsList tournaments={tournaments || []} /> : <div className="card p-5 text-sm text-stone-600">General/open tournaments will appear here when published.</div>}
         </section>
         <section>
           <div className="mb-4 flex items-center justify-between">
