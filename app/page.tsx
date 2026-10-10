@@ -24,11 +24,12 @@ export default async function HomePage() {
   let interschools = interschoolDefaults;
   try { interschools = await getInterschoolSettings(); } catch {}
   const service = createSupabaseServiceClient();
-  const [{ data: tournaments }, { data: storedNews }, { data: settings }, { data: galleryPhotos }] = await Promise.all([
+  const [{ data: tournaments }, { data: storedNews }, { data: settings }, { data: galleryPhotos }, {data: results, error: resultsError}] = await Promise.all([
     service.from("tournaments").select("*").eq("tournament_type", "general_open").in("status", ["open", "closed"]).order("start_date", { ascending: true }).limit(9),
     service.from("news_posts").select("*").order("published_at", { ascending: false }),
     service.from("club_settings").select("*").eq("id", "default").maybeSingle(),
-    service.from("gallery_photos").select("*").eq("is_published", true).order("event_date", { ascending: false }).order("created_at", { ascending: false })
+    service.from("gallery_photos").select("*").eq("is_published", true).order("event_date", { ascending: false }).order("created_at", { ascending: false }),
+    service.from("tournaments").select("id,title,tournament_year,first_place_name,result_summary,vega_url,winner_photo_url,start_date").or("first_place_name.not.is.null,result_summary.not.is.null").order("tournament_year", {ascending:false, nullsFirst:false}).order("start_date", {ascending:false, nullsFirst:false}).order("created_at", {ascending:false}).limit(6)
   ]);
   const news = mergeHpccNews(storedNews || []).slice(0, 3);
   const mapAddress = settings?.club_address || "East Auckland, New Zealand";
@@ -65,6 +66,17 @@ export default async function HomePage() {
           </div>
         </section>
       </div>
+      <section className="mt-12" aria-labelledby="home-results-heading">
+        <div className="mb-5 flex items-center justify-between gap-4"><h2 id="home-results-heading" className="font-serif text-2xl font-bold">Latest Tournament Results</h2><Link href="/results" className="text-sm font-bold underline">View All Results</Link></div>
+        {results?.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{results.map(result=><article key={result.id} className="card p-5">
+          {result.winner_photo_url && <img src={result.winner_photo_url} alt={`${result.title} winner`} className="mb-4 h-40 w-full rounded-lg object-cover"/>}
+          {result.tournament_year && <p className="text-xs font-bold uppercase tracking-wide text-stone-500">{result.tournament_year} season</p>}
+          <h3 className="mt-2 font-serif text-xl font-bold">{result.title}</h3>
+          {result.first_place_name && <p className="mt-3 text-sm"><b>Winner(s):</b> {result.first_place_name}</p>}
+          {result.result_summary && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-stone-600">{result.result_summary}</p>}
+          <div className="mt-4 flex flex-wrap gap-4 text-sm font-bold"><Link href="/results" className="underline">Result details</Link>{result.vega_url && <a href={result.vega_url} target="_blank" rel="noreferrer" className="underline">{result.vega_url.includes('vegaresults.com')?'Vega results':'Full results'}</a>}</div>
+        </article>)}</div> : <p className="card p-5 text-sm text-stone-600">{resultsError ? "Results are temporarily unavailable. Please try again shortly." : "Tournament results will appear here when added in admin."}</p>}
+      </section>
       <section className="mt-12" aria-labelledby="programmes-heading">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Play. Learn. Belong.</p><h2 id="programmes-heading" className="mb-6 mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">Find your place in the game.</h2>
         <div className="grid overflow-hidden rounded-2xl md:grid-cols-3">

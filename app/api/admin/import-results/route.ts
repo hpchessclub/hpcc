@@ -32,7 +32,7 @@ export async function POST(req:Request){
    if(verifyError||!record||record.first_place_name!==r.winner||record.result_summary!==summary||(r.url&&record.vega_url!==r.url))throw new Error(`Could not verify ${r.title}. Review the saved record before retrying.`);
    saved++;
   }
-  revalidatePath('/results');revalidatePath('/club-admin/results');revalidatePath('/club-admin/tournaments');
+  revalidatePath('/');revalidatePath('/results');revalidatePath('/club-admin/results');revalidatePath('/club-admin/tournaments');
   return NextResponse.json({ok:true,count:saved});
  }catch(error){return NextResponse.json({error:error instanceof Error?error.message:'Unable to import results.'},{status:400});}
 }
