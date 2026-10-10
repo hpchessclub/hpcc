@@ -1,4 +1,4 @@
 import {requireAdmin} from "@/lib/auth";
-import {getSeasonResultsSettings} from "@/lib/seasonResultsSettings";
-import SeasonResultsManager from "@/components/admin/SeasonResultsManager";
-export default async function ResultsAdmin(){await requireAdmin("results");return <SeasonResultsManager initial={await getSeasonResultsSettings()}/>;}
+import TournamentsAdmin from "../tournaments/page";
+import ImportTournamentResults from "@/components/admin/ImportTournamentResults";
+export default async function ResultsAdmin(){await requireAdmin("results");return <><ImportTournamentResults/><TournamentsAdmin/></>;}

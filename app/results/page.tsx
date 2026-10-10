@@ -1,5 +1,3 @@
-import SeasonResults from "@/components/SeasonResults";
-import {getSeasonResultsSettings} from "@/lib/seasonResultsSettings";
 export const dynamic = "force-dynamic";
 import PageShell from "@/components/PageShell";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -9,7 +7,6 @@ import { displayRatingFormat, displayRatingType, displayTournamentSystem } from 
 function yearOf(t:any){ return Number(t.tournament_year || (t.start_date ? new Date(t.start_date).getFullYear() : new Date().getFullYear())); }
 
 export default async function ResultsPage() {
-  const config = await getSeasonResultsSettings();
   const service = createSupabaseServiceClient();
   const { data } = await service
     .from("tournaments")
@@ -28,7 +25,6 @@ export default async function ResultsPage() {
       <h1 className="text-4xl font-extrabold">Results</h1>
       <p className="mt-4 max-w-3xl text-lg leading-8 text-stone-700">Completed and past tournament results, winner details, Vega links and PGN/broadcast links.</p>
 
-      <div className="mt-10"><SeasonResults config={config}/></div>
       <div className="mt-10 space-y-12">
         {years.map((year, index)=><section key={year}>
           <h2 className="mb-6 text-3xl font-extrabold">{index === 0 ? `${year} Results` : `Previous tournaments of ${year}`}</h2>
@@ -52,7 +48,7 @@ export default async function ResultsPage() {
             </article>)}
           </div>
         </section>)}
-        {years.length===0 && <div className="rounded-xl bg-stone-50 p-6 text-stone-600">Additional tournament reports will appear here when published.</div>}
+        {years.length===0 && <div className="rounded-xl bg-stone-50 p-6 text-stone-600">No results have been published yet.</div>}
       </div>
     </div>
   </main></PageShell>

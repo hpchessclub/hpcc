@@ -1,4 +1,3 @@
-import { SEASON_RESULTS_SLUG } from "@/lib/seasonResultsConfig";
 import { POPPIES_CONFIG_SLUG } from "@/lib/poppiesConfig";
 import { INTERSCHOOL_CONFIG_SLUG } from "@/lib/interschoolConfig";
 import { JUNIOR_CONFIG_SLUG } from "@/lib/juniorConfig";
@@ -58,11 +57,11 @@ export async function POST(req: Request){
   const s=createSupabaseServiceClient();
   const clean:any={...payload, updated_at:new Date().toISOString()};
   if (table === "news_posts") {
-    if ([JUNIOR_CONFIG_SLUG, INTERSCHOOL_CONFIG_SLUG, POPPIES_CONFIG_SLUG, SEASON_RESULTS_SLUG].includes(payload?.slug)) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
+    if ([JUNIOR_CONFIG_SLUG, INTERSCHOOL_CONFIG_SLUG, POPPIES_CONFIG_SLUG, "hpcc-internal-season-results"].includes(payload?.slug)) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
     if (id) {
       const {data: existing, error} = await s.from("news_posts").select("slug").eq("id", id).maybeSingle();
       if (error) return NextResponse.json({error:error.message},{status:400});
-      if ([JUNIOR_CONFIG_SLUG, INTERSCHOOL_CONFIG_SLUG, POPPIES_CONFIG_SLUG, SEASON_RESULTS_SLUG].includes(existing?.slug)) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
+      if ([JUNIOR_CONFIG_SLUG, INTERSCHOOL_CONFIG_SLUG, POPPIES_CONFIG_SLUG, "hpcc-internal-season-results"].includes(existing?.slug)) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
     }
   }
 
@@ -90,7 +89,7 @@ export async function POST(req: Request){
     if(booleanFields.has(k)) clean[k]=!!clean[k];
   });
   if(table==='news_posts' && clean.title && !clean.slug) clean.slug=slugify(clean.title);
-  if (table === "news_posts" && [JUNIOR_CONFIG_SLUG, INTERSCHOOL_CONFIG_SLUG, POPPIES_CONFIG_SLUG, SEASON_RESULTS_SLUG].includes(clean.slug)) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
+  if (table === "news_posts" && [JUNIOR_CONFIG_SLUG, INTERSCHOOL_CONFIG_SLUG, POPPIES_CONFIG_SLUG, "hpcc-internal-season-results"].includes(clean.slug)) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
   if(table==='news_posts' && clean.is_published && !clean.published_at) clean.published_at=new Date().toISOString();
   if(table==='tournaments' && (Object.prototype.hasOwnProperty.call(clean, 'rounds_display') || Object.prototype.hasOwnProperty.call(clean, 'rounds'))) clean.rounds = tournamentRounds(clean);
   if(table==='tournaments' && clean.title && !clean.slug) clean.slug=slugify(clean.title);
