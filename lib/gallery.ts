@@ -10,3 +10,7 @@ export function galleryAlbums(photos: any[]) {
   return [...albums.values()].sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
 }
 export function albumUrl(key: string) { return `/photo-gallery?album=${encodeURIComponent(key)}`; }
+
+export function galleryPhotoDescription(description: unknown) {
+  return String(description || "").split(/\r?\n/).filter(line => !/^Source:\s*https?:\/\/hpchessclub\.org\.s3-website-ap-southeast-2\.amazonaws\.com\/gallery\/?\s*$/i.test(line.trim())).join("\n").trim();
+}
