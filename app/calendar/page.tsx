@@ -8,10 +8,17 @@ import { formatMoney } from "@/lib/format";
 import { displayRatingFormat, displayRatingType, displayTournamentSystem, tournamentRounds } from "@/lib/tournamentOptions";
 
 function dateLabel(t: any) {
-  if (t.date_display) return t.date_display;
+  if (t.date_display) {
+    if (t.tournament_type === "club_calendar") {
+      const date = String(t.date_display).replace(/;?\s*session time to be confirmed\.?/gi, "").trim();
+      return `${date}; Tuesdays at 7:30pm`;
+    }
+    return t.date_display;
+  }
   if (!t.start_date) return "Date TBC";
   const d = new Date(t.start_date);
-  return d.toLocaleDateString("en-NZ", { month: "short", day: "numeric" });
+  const date = d.toLocaleDateString("en-NZ", { month: "short", day: "numeric" });
+  return t.tournament_type === "club_calendar" ? `${date}; Tuesdays at 7:30pm` : date;
 }
 function yearOf(t: any) {
   return Number(t.tournament_year || (t.start_date ? new Date(t.start_date).getFullYear() : new Date().getFullYear()));
@@ -45,21 +52,21 @@ export default async function CalendarPage(){
 
   return <PageShell><main className="container-page py-12">
     <div className="mx-auto max-w-5xl rounded-2xl bg-white p-8 shadow-soft">
-      <h1 className="text-4xl font-extrabold tracking-tight">{pageTitle}</h1>
+      <h1 className="font-serif text-3xl font-bold tracking-tight sm:text-4xl">{pageTitle}</h1>
       <p className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-8 text-stone-700">{description}</p>
       <p className="mt-4 text-sm text-stone-600">Calendar items link to the configured tournament details where available.</p>
 
       <div className="mt-10 space-y-12">
         {years.map(year => <section key={year}>
-          <h2 className="mb-5 text-2xl font-extrabold">{year === firstYear ? configuredYearTitle : `${year} Calendar`}</h2>
+          <h2 className="mb-5 font-serif text-2xl font-bold">{year === firstYear ? configuredYearTitle : `${year} Calendar`}</h2>
           <div className="divide-y divide-stone-200 border-y border-stone-200">
             {(byYear.get(year)||[]).map((t:any)=>{
               const isClosed = ["closed", "completed", "archived"].includes(t.status);
               return <div key={t.id} className="grid gap-3 py-4 md:grid-cols-[95px,1fr]">
-                <div className="font-mono text-lg text-stone-700">{dateLabel(t)}</div>
+                <div className="text-base font-medium leading-7 text-hpcc-navy">{dateLabel(t)}</div>
                 <div>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    {isClosed && t.status === "closed" ? <span className="font-bold">Closed</span> : <Link href={eventLink(t)} className="font-semibold underline decoration-stone-400 underline-offset-4 hover:text-amber-700">{t.title}</Link>}
+                    {isClosed && t.status === "closed" ? <span className="font-bold">Closed</span> : <Link href={eventLink(t)} className="font-serif text-lg font-bold underline decoration-stone-400 underline-offset-4 hover:text-amber-700">{t.title}</Link>}
                     {t.status !== "closed" && <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-bold uppercase text-stone-700">{t.status}</span>}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-stone-700">
