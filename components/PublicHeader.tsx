@@ -12,6 +12,7 @@ const mainLinks: [string, string][] = [
   ["/news", "News"],
   ["/photo-gallery", "Gallery"],
   ["/coaching", "Coaching"],
+  ["/juniors", "Juniors"],
   ["/live-boards", "Live Boards"]
 ];
 
