@@ -38,6 +38,7 @@ export default async function TournamentsAdmin(){
     {name:'max_players',label:'Maximum players',type:'number'},
     {name:'registration_open_at',label:'Registration open date',type:'date'},
     {name:'registration_close_at',label:'Registration close date',type:'date'},
+    {name:'require_payment',label:'Require tournament payment (disable only for free club events)',type:'checkbox'},
     {name:'allow_public_registration',label:'Allow public registration',type:'checkbox'},
     {name:'show_public_entries',label:'Show public entries',type:'checkbox'},
     {name:'vega_url',label:'Results URL (Vega or other)' },
@@ -54,5 +55,5 @@ export default async function TournamentsAdmin(){
     fields.push({name:'publish_to_social',label:'Create social media post draft when saving',type:'checkbox'});
     fields.push({name:'social_platforms',label:'Select social media platforms',type:'multi_options',options:['Facebook','Instagram','YouTube','X','LinkedIn']});
   }
-  return <div><CrudManager table="tournaments" title="Manage Tournaments, Calendar Events and General Events" rows={data||[]} fields={fields} /><div className="card mt-6 p-5 text-sm text-slate-700"><b>Registration rules:</b><br/>• Club Calendar Event: active AK membership ID/email and separate tournament payment required.<br/>• General/Open Tournament: appears in Calendar and Results, but registration is confirmed only after Stripe payment.</div></div>;
+  return <div><CrudManager table="tournaments" title="Manage Tournaments, Calendar Events and General Events" rows={data||[]} fields={fields} /><div className="card mt-6 p-5 text-sm text-slate-700"><b>Registration rules:</b><br/>• Club Calendar Event: active HPCC membership required. Free registration is available when the fee is zero and Require tournament payment is disabled.<br/>• General/Open Tournament: appears in Calendar and Results, but registration is confirmed only after Stripe payment.</div></div>;
 }

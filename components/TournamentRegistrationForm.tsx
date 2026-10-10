@@ -55,6 +55,8 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
   );
   const fee = chosen ? Number(chosen.fee_cents || 0) : Number(tournament.entry_fee_cents || 0);
 
+  const isFreeClubEvent = isClubCalendar && tournament.require_payment === false && fee === 0;
+
   useEffect(() => {
     if (fee > 0) {
       fetch("/api/payments/status").then((res) => res.json()).then((data) => { setPaymentMode(data.mode); setPaymentAvailable(data.available); }).catch(() => {});
@@ -130,7 +132,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
       <h2 className="text-2xl font-extrabold">{isClubCalendar ? "Enrol for" : "Register for"} {tournament.title}</h2>
       {isClubCalendar ? (
         <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-900">
-          <b>Club Calendar Event:</b> active Howick-Pakuranga membership is mandatory. Enter your Membership ID or registered email, click <b>Find Member</b>, then register and pay the tournament entry fee. Membership does not cover tournament fees.
+          <b>Club Calendar Event:</b> active Howick-Pakuranga membership is mandatory. Enter your Membership ID or registered email, click <b>Find Member</b>, then register. {isFreeClubEvent ? "Registration is free for active members; no payment is required." : "A separate tournament entry fee is required."}
         </div>
       ) : (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -140,7 +142,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
       )}
       {fee > 0 && !paymentAvailable && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-4 text-red-800">Online payment is temporarily unavailable. Contact hpchess.winnie@gmail.com to arrange registration.</p>}
       {paymentMode === "test" && <p className="mt-3 font-bold text-amber-800">Test checkout: this does not take a real payment or confirm a live paid entry.</p>}
-      <p className="mt-3 text-sm text-slate-600">Current fee: <b>{fee > 0 ? formatMoney(fee) : "Not configured — contact the club"}</b>.</p>
+      <p className="mt-3 text-sm text-slate-600">Current fee: <b>{fee > 0 ? formatMoney(fee) : isFreeClubEvent ? "Free for active members" : "Not configured — contact the club"}</b>.</p>
 
       <p className="mt-4 text-sm"><a href="/join" className="font-bold underline">Join or renew Howick-Pakuranga membership</a></p>
       {isClubCalendar && (
@@ -241,8 +243,8 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
           Open payment page
         </a>
       )}
-      <button disabled={loading || confirmed || fee <= 0 || (fee > 0 && !paymentAvailable) || (isClubCalendar && !member)} className="btn-primary mt-6">
-        {confirmed ? "Registration Confirmed" : loading ? "Submitting..." : "Continue to Payment"}
+      <button disabled={loading || confirmed || (!isFreeClubEvent && fee <= 0) || (fee > 0 && !paymentAvailable) || (isClubCalendar && !member)} className="btn-primary mt-6">
+        {confirmed ? "Registration Confirmed" : loading ? "Submitting..." : isFreeClubEvent ? "Register Free" : "Continue to Payment"}
       </button>
       {isClubCalendar && !member && <p className="mt-2 text-xs text-slate-500">Use Find Member first so the form can populate active membership details.</p>}
     </form>

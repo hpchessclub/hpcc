@@ -64,7 +64,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const categoryName = selectedCategory ? selectedCategory.name : "General Entry";
     if (!Number.isSafeInteger(entryFeeCents) || entryFeeCents < 0) return NextResponse.json({ error: "Invalid tournament fee. Please contact the club." }, { status: 400 });
 
-    const requiresPayment = true;
+    const requiresPayment = !(isClubCalendar && tournament.require_payment === false && entryFeeCents === 0);
     if (requiresPayment && entryFeeCents <= 0) return NextResponse.json({ error: "This tournament requires payment, but no fee has been configured. Please contact the club." }, { status: 400 });
 
     if (requiresPayment) assertPaymentReady();
@@ -102,6 +102,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (error) throw error;
 
     savedRegistrationId = registration.id;
+    if (!requiresPayment) {
+      const emailStatus = await tryTournamentConfirmation(s, registration, tournament);
+      return NextResponse.json({ ok: true, registration_id: registration.id, payment_status: "paid", registration_status: "confirmed", email_status: emailStatus, message: "Free club registration confirmed. No payment is required." });
+    }
     const stripe = getStripe();
     const site = paymentConfiguration().siteUrl;
     const session = await stripe.checkout.sessions.create({
