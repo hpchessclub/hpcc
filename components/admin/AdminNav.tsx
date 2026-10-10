@@ -23,6 +23,7 @@ const items = [
   ["email_diagnostics", "/club-admin/email-diagnostics", "Email Diagnostics"],
   ["gallery", "/club-admin/photo-gallery", "Photo Gallery"],
   ["live_boards", "/club-admin/live-boards", "Live Boards"],
+  ["juniors", "/club-admin/juniors", "Junior Chess"],
   ["coaching", "/club-admin/coaching", "Coaching"],
   ["agm", "/club-admin/agm", "AGM & Notices"],
   ["faq", "/club-admin/faq", "F.A.Q."],

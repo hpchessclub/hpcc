@@ -28,7 +28,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 export type AdminArea =
   | "dashboard" | "documentation" | "users" | "settings" | "news" | "tournaments" | "results"
   | "members" | "tournament_registrations" | "gallery" | "faq" | "coaching"
-  | "payment_accounts" | "agm" | "absences" | "payments" | "social_posts" | "live_boards"
+  | "juniors" | "payment_accounts" | "agm" | "absences" | "payments" | "social_posts" | "live_boards"
   | "membership_options" | "calendar" | "reports" | "enquiries" | "member_notices" | "email_templates" | "bulk_email" | "email_diagnostics";
 
 export const AREA_LABELS: Record<AdminArea, string> = {
@@ -44,6 +44,7 @@ export const AREA_LABELS: Record<AdminArea, string> = {
   gallery: "Photo Gallery",
   faq: "F.A.Q.",
   coaching: "Coaching",
+  juniors: "Junior Chess",
   agm: "AGM & Notices",
   absences: "Absence Reports",
   payments: "Payments",
@@ -68,7 +69,7 @@ export function roleAreas(role: string | null | undefined): AdminArea[] {
   if (role === "tournament_manager") return ["dashboard", "documentation", "tournaments", "results", "tournament_registrations", "absences", "live_boards", "calendar"];
   if (role === "gallery_manager") return ["dashboard", "documentation", "gallery"];
   if (role === "faq_manager") return ["dashboard", "documentation", "faq"];
-  if (role === "coaching_manager") return ["dashboard", "documentation", "coaching"];
+  if (role === "coaching_manager") return ["dashboard", "documentation", "coaching", "juniors"];
   if (role === "social_media_manager") return ["dashboard", "documentation", "social_posts"];
   if (role === "communications_manager") return ["dashboard", "documentation", "member_notices", "email_templates", "bulk_email", "email_diagnostics"];
   return [];

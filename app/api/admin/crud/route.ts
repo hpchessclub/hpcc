@@ -1,3 +1,4 @@
+import { JUNIOR_CONFIG_SLUG } from "@/lib/juniorConfig";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getCurrentAdmin } from "@/lib/auth";
@@ -53,6 +54,15 @@ export async function POST(req: Request){
   if(!canAccessTable(admin.profile.role, table)) return NextResponse.json({error:'Permission denied'},{status:403});
   const s=createSupabaseServiceClient();
   const clean:any={...payload, updated_at:new Date().toISOString()};
+  if (table === "news_posts") {
+    if (payload?.slug === JUNIOR_CONFIG_SLUG) return NextResponse.json({error:"Use Junior Chess settings to edit this configuration."},{status:403});
+    if (id) {
+      const {data: existing, error} = await s.from("news_posts").select("slug").eq("id", id).maybeSingle();
+      if (error) return NextResponse.json({error:error.message},{status:400});
+      if (existing?.slug === JUNIOR_CONFIG_SLUG) return NextResponse.json({error:"Use Junior Chess settings to edit this configuration."},{status:403});
+    }
+  }
+
 
   if (table === "payment_accounts" && ['create','update'].includes(action)) {
     for (const key of Object.keys(clean)) if (!["name", "code", "account_number", "purpose", "is_active", "updated_at"].includes(key)) delete clean[key];
@@ -77,6 +87,7 @@ export async function POST(req: Request){
     if(booleanFields.has(k)) clean[k]=!!clean[k];
   });
   if(table==='news_posts' && clean.title && !clean.slug) clean.slug=slugify(clean.title);
+  if (table === "news_posts" && clean.slug === JUNIOR_CONFIG_SLUG) return NextResponse.json({error:"Use Junior Chess settings to edit this configuration."},{status:403});
   if(table==='news_posts' && clean.is_published && !clean.published_at) clean.published_at=new Date().toISOString();
   if(table==='tournaments' && (Object.prototype.hasOwnProperty.call(clean, 'rounds_display') || Object.prototype.hasOwnProperty.call(clean, 'rounds'))) clean.rounds = tournamentRounds(clean);
   if(table==='tournaments' && clean.title && !clean.slug) clean.slug=slugify(clean.title);
