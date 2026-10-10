@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-hpcc-navy: #171717;
-  --color-hpcc-blue: #262626;
-  --color-hpcc-royal: #171717;
-  --color-hpcc-accent: #DDE0DE;
-  --color-hpcc-pale: #FAFAF9;
-  --color-hpcc-gold: #DDE0DE;
+  --color-hpcc-navy: #244A2C;
+  --color-hpcc-blue: #315B38;
+  --color-hpcc-royal: #244A2C;
+  --color-hpcc-accent: #D9EED0;
+  --color-hpcc-pale: #F1F8ED;
+  --color-hpcc-gold: #D9EED0;
   --shadow-soft: 0 14px 45px rgb(0 0 0 / 0.12);
 }
 
 :root {
-  --hpcc-navy: #171717;
-  --hpcc-blue: #262626;
-  --hpcc-accent: #DDE0DE;
-  --hpcc-gold: #DDE0DE;
-  --hpcc-pale: #FAFAF9;
+  --hpcc-navy: #244A2C;
+  --hpcc-blue: #315B38;
+  --hpcc-accent: #D9EED0;
+  --hpcc-gold: #D9EED0;
+  --hpcc-pale: #F1F8ED;
 }
 
 html { scroll-behavior: smooth; }
-body { background: #fafaf9; color: #262626; }
+body { background: #F7FBF4; color: #244A2C; }
 
 .chessboard-subtle {
   background-image:
@@ -34,8 +34,8 @@ body { background: #fafaf9; color: #262626; }
 @layer components {
   .container-page { @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8; }
   .card { @apply rounded-2xl border border-stone-200 bg-white shadow-soft; }
-  .btn-primary { @apply inline-flex items-center justify-center rounded-md bg-hpcc-navy px-5 py-3 text-sm font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50; }
-  .btn-secondary { @apply inline-flex items-center justify-center rounded-md border border-hpcc-navy bg-white px-5 py-3 text-sm font-bold text-hpcc-navy transition hover:bg-stone-100; }
+  .btn-primary { @apply inline-flex items-center justify-center rounded-md bg-hpcc-navy px-5 py-3 text-sm font-bold text-white transition hover:bg-hpcc-blue disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-secondary { @apply inline-flex items-center justify-center rounded-md border border-hpcc-navy bg-white px-5 py-3 text-sm font-bold text-hpcc-navy transition hover:bg-hpcc-pale; }
   .btn-gold { @apply inline-flex items-center justify-center rounded-md bg-hpcc-gold px-5 py-3 text-sm font-bold text-black transition hover:brightness-110; }
   .input { @apply w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-hpcc-gold focus:ring-2 focus:ring-hpcc-gold/20; }
   .label { @apply text-sm font-semibold text-stone-700; }

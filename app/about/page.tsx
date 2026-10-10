@@ -24,13 +24,13 @@ export default function AboutPage() {
   return (
     <PageShell>
       <main className="container-page py-12">
-        <section className="rounded-3xl bg-stone-950 p-8 text-white shadow-soft lg:p-12">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-stone-300">About Us</p>
+        <section className="rounded-3xl bg-hpcc-pale p-8 text-hpcc-navy shadow-soft lg:p-12">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-hpcc-blue">About Us</p>
           <h1 className="mt-3 max-w-4xl font-serif text-4xl sm:text-5xl">Howick-Pakuranga Chess Club</h1>
-          <p className="mt-5 text-xl text-stone-200">Learn. Play. Grow with HPCC.</p>
+          <p className="mt-5 text-xl text-hpcc-blue">Learn. Play. Grow with HPCC.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/join" className="rounded-md bg-white px-5 py-3 font-bold text-stone-950">Join the Club</Link>
-            <Link href="/tournaments" className="rounded-md border border-white/40 px-5 py-3 font-bold hover:bg-white/10">Explore Tournaments</Link>
+            <Link href="/join" className="rounded-md bg-white px-5 py-3 font-bold text-hpcc-navy">Join the Club</Link>
+            <Link href="/tournaments" className="rounded-md border border-hpcc-navy/30 px-5 py-3 font-bold hover:bg-hpcc-accent">Explore Tournaments</Link>
           </div>
         </section>
 

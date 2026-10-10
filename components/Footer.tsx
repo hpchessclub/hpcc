@@ -45,39 +45,39 @@ export default async function Footer() {
   ].filter(([, url]) => !!url);
 
   return (
-    <footer className="bg-black text-white">
+    <footer className="bg-hpcc-accent text-hpcc-navy">
       <div className="container-page grid gap-8 py-10 md:grid-cols-5">
         <div className="md:col-span-2">
           <div className="flex items-center gap-3">
             <Image src="/logo.png" alt="Howick-Pakuranga" width={80} height={80} className="h-16 w-16 rounded-full object-contain sm:h-20 sm:w-20" />
             <div>
               <div className="font-bold">Howick-Pakuranga Chess Club</div>
-              <div className="text-sm text-hpcc-gold">Strategy. Community. Excellence.</div>
+              <div className="text-sm text-hpcc-navy">Strategy. Community. Excellence.</div>
             </div>
           </div>
-          <p className="mt-4 max-w-md text-sm text-stone-300">Serving Howick and Pakuranga with tournaments, coaching, junior development and community chess events.</p>
+          <p className="mt-4 max-w-md text-sm text-hpcc-navy/80">Serving Howick and Pakuranga with tournaments, coaching, junior development and community chess events.</p>
           {social.length > 0 && <div className="mt-5">
-            <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">Stay Connected</h3>
-            <div className="flex flex-wrap gap-3 text-sm font-bold text-white">
-              {social.map(([label, url], index) => <a key={String(label)} href={String(url)} target="_blank" rel="noreferrer" aria-label={String(label)} className={`inline-flex h-11 w-11 items-center justify-center border transition hover:border-hpcc-gold hover:bg-hpcc-gold hover:text-black ${index % 2 ? "border-white/25 bg-white/10" : "border-white/15 bg-black"}`}><SocialIcon label={String(label)} /></a>)}
+            <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-hpcc-navy">Stay Connected</h3>
+            <div className="flex flex-wrap gap-3 text-sm font-bold text-hpcc-navy">
+              {social.map(([label, url], index) => <a key={String(label)} href={String(url)} target="_blank" rel="noreferrer" aria-label={String(label)} className={`inline-flex h-11 w-11 items-center justify-center border transition hover:border-hpcc-gold hover:bg-hpcc-gold hover:text-hpcc-navy ${index % 2 ? "border-hpcc-navy/25 bg-hpcc-navy/10" : "border-hpcc-navy/15 bg-white"}`}><SocialIcon label={String(label)} /></a>)}
             </div>
           </div>}
         </div>
         <div>
-          <h3 className="font-bold text-white">Quick Links</h3>
-          <div className="mt-3 grid gap-2 text-sm text-stone-300">
-            {quickLinks.map(([href, label]) => <Link key={href} href={href} className="hover:text-hpcc-gold">{label}</Link>)}
+          <h3 className="font-bold text-hpcc-navy">Quick Links</h3>
+          <div className="mt-3 grid gap-2 text-sm text-hpcc-navy/80">
+            {quickLinks.map(([href, label]) => <Link key={href} href={href} className="hover:text-hpcc-navy">{label}</Link>)}
           </div>
         </div>
         <div>
-          <h3 className="font-bold text-white">Useful Chess Links</h3>
-          <div className="mt-3 grid gap-2 text-sm text-stone-300">
-            {usefulChessLinks.map(([label, href]) => <a key={label} href={href} target="_blank" rel="noreferrer" className="hover:text-hpcc-gold">{label}</a>)}
+          <h3 className="font-bold text-hpcc-navy">Useful Chess Links</h3>
+          <div className="mt-3 grid gap-2 text-sm text-hpcc-navy/80">
+            {usefulChessLinks.map(([label, href]) => <a key={label} href={href} target="_blank" rel="noreferrer" className="hover:text-hpcc-navy">{label}</a>)}
           </div>
         </div>
         <div>
-          <h3 className="font-bold text-white">Contact Us</h3>
-          <div className="mt-3 space-y-2 text-sm text-stone-300">
+          <h3 className="font-bold text-hpcc-navy">Contact Us</h3>
+          <div className="mt-3 space-y-2 text-sm text-hpcc-navy/80">
             <p>{settings?.club_address || "Howick Bowling Club, 33 Selwyn Road, Cockle Bay, Auckland 2014, New Zealand"}</p>
             <p>{settings?.general_email || "hpchess.winnie@gmail.com"}</p>
             {(settings?.senior_club_captain_name || settings?.club_captain_name) && <p>Senior Club Captain: {settings?.senior_club_captain_name || settings?.club_captain_name}</p>}
@@ -85,7 +85,7 @@ export default async function Footer() {
           </div>
         </div>
       </div>
-      <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-stone-300">
+      <div className="border-t border-hpcc-navy/10 px-4 py-4 text-center text-xs text-hpcc-navy/80">
         <p>© 2026 Howick-Pakuranga Chess Club. All rights reserved.</p>
         <p className="mt-1">Powered by FocalCXM New Zealand Limited and Volga Systems (NZ) Limited.</p>
       </div>
