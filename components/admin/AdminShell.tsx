@@ -11,7 +11,7 @@ export default function AdminShell({ admin, children }: { admin: any; children: 
           <div><b>Howick-Pakuranga</b><div className="text-xs uppercase tracking-wider text-hpcc-gold">Club Admin</div></div>
         </Link>
         <div className="flex items-center gap-3 text-sm">
-          <Link href="/club-admin/profile" className="hidden hover:text-hpcc-gold sm:block">{displayName(admin.profile, admin.user.email)}</Link>
+          <Link href="/club-admin/profile" className="hover:text-hpcc-gold"><span className="hidden sm:inline">{displayName(admin.profile, admin.user.email)} · </span>My Profile</Link>
           <form action="/club-admin/logout" method="post"><button className="rounded-full bg-white px-4 py-2 font-bold text-black hover:bg-hpcc-gold">Sign out</button></form>
         </div>
       </div>
