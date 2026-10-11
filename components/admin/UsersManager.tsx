@@ -4,6 +4,9 @@ import { AREA_LABELS, ROLES, ROLE_LABELS, roleAreas } from "@/lib/roles";
 
 export default function UsersManager() {
   const [users, setUsers] = useState<any[]>([]);
+  const [message,setMessage]=useState("");
+  const [busyId,setBusyId]=useState("");
+  const [currentUserId,setCurrentUserId]=useState("");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
@@ -11,10 +14,14 @@ export default function UsersManager() {
   const [newUser, setNewUser] = useState({ first_name: "", last_name: "", email: "", password: "", role: "admin" });
 
   async function load() {
-    const res = await fetch("/api/admin/users");
-    const json = await res.json();
-    setUsers(json.users || []);
-    setLoading(false);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/users",{cache:"no-store"});
+      const json = await res.json();
+      if(!res.ok)throw new Error(json.error||"Unable to load users.");
+      setUsers(json.users || []);setCurrentUserId(json.current_user_id||"");
+    } catch(error){setMessage(error instanceof Error?error.message:"Unable to load users.");}
+    finally{setLoading(false);}
   }
   useEffect(() => { load(); }, []);
 
@@ -35,22 +42,22 @@ export default function UsersManager() {
   }
 
   async function update(id: string, role: string, is_active: boolean, first_name: string, last_name: string) {
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, role, is_active, first_name, last_name }),
-    });
-    const json = await res.json();
-    if (!res.ok) alert(json.error || "Unable to update user");
-    else load();
+    if(busyId)return;setBusyId(id);setMessage("");
+    try{
+      const res=await fetch("/api/admin/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,role,is_active,first_name,last_name})});
+      const json=await res.json();if(!res.ok)throw new Error(json.error||"Unable to update user.");
+      await load();setMessage("User access saved.");
+    }catch(error){setMessage(error instanceof Error?error.message:"Unable to update user.");}finally{setBusyId("");}
   }
 
-  async function remove(id: string, email: string) {
-    if (!confirm(`Remove admin login for ${email}? This deletes the Supabase Auth user and profile.`)) return;
-    const res = await fetch(`/api/admin/users?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-    const json = await res.json();
-    if (!res.ok) alert(json.error || "Unable to remove user");
-    else load();
+  async function remove(id:string,email:string){
+    if(busyId||!confirm(`Remove ${email}? The login and profile will be deleted where possible. If deletion is blocked, admin access will be revoked and club files retained.`))return;
+    setBusyId(id);setMessage("");
+    try{
+      const res=await fetch(`/api/admin/users?id=${encodeURIComponent(id)}`,{method:"DELETE"});const json=await res.json();
+      if(!res.ok)throw new Error(json.error||"Unable to remove user.");
+      await load();setMessage(json.message||"User removed.");
+    }catch(error){setMessage(error instanceof Error?error.message:"Unable to remove user.");}finally{setBusyId("");}
   }
 
   const filtered = useMemo(
@@ -58,7 +65,7 @@ export default function UsersManager() {
     [users, search]
   );
 
-  if (loading) return <p>Loading users...</p>;
+  if (loading && !users.length) return <p>Loading users...</p>;
 
   return (
     <div>
@@ -71,10 +78,12 @@ export default function UsersManager() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setShowAdd((v) => !v)} className="btn-primary">{showAdd ? "Close Add User" : "Add User"}</button>
-          <button onClick={load} className="btn-secondary">Refresh</button>
+          <button onClick={()=>{setMessage("");load();}} disabled={loading||!!busyId} className="btn-secondary">{loading?"Refreshing…":"Refresh"}</button>
         </div>
       </div>
 
+      <p role="status" className="mt-4 whitespace-pre-line text-sm">{message}</p>
+      <p className="mt-2 text-sm text-stone-600">Showing {filtered.length} of {users.length} accounts. Accounts missing a profile have no admin access until a Super Admin assigns a role and saves.</p>
       {showAdd && (
         <form onSubmit={createUser} className="card mt-6 p-5">
           <h2 className="text-xl font-bold">Add New Admin / Staff User</h2>
@@ -111,13 +120,13 @@ export default function UsersManager() {
               <tr key={u.id} className="border-t align-top">
                 <td className="p-3"><input defaultValue={u.first_name || ""} id={`first-${u.id}`} className="admin-input w-32" /></td>
                 <td className="p-3"><input defaultValue={u.last_name || ""} id={`last-${u.id}`} className="admin-input w-32" /></td>
-                <td className="p-3">{u.email}</td>
+                <td className="p-3">{u.email}{!u.has_profile&&<p className="mt-1 text-xs text-amber-800">Missing profile — assign role and Save</p>}{!u.has_auth&&<p className="mt-1 text-xs text-amber-800">Profile only — login missing</p>}</td>
                 <td className="p-3"><select defaultValue={u.role} id={`role-${u.id}`} className="admin-input min-w-48">{ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select></td>
                 <td className="p-3 max-w-md text-xs text-slate-600">{roleAreas(u.role).map((a) => AREA_LABELS[a] || a).join(", ") || "No admin access"}</td>
                 <td className="p-3"><input type="checkbox" defaultChecked={u.is_active} id={`active-${u.id}`} /></td>
                 <td className="p-3">
                   <div className="flex flex-wrap gap-2">
-                    <button
+                    <button disabled={!!busyId || !u.has_auth}
                       onClick={() => update(
                         u.id,
                         (document.getElementById(`role-${u.id}`) as HTMLSelectElement).value,
@@ -129,11 +138,12 @@ export default function UsersManager() {
                     >
                       Save/Edit
                     </button>
-                    <button onClick={() => remove(u.id, u.email)} className="rounded-md bg-red-700 px-4 py-2 font-bold text-white hover:bg-red-800">Remove</button>
+                    <button disabled={!!busyId || u.id===currentUserId} title={u.id===currentUserId?"You cannot remove your own account":undefined} onClick={() => remove(u.id, u.email)} className="rounded-md bg-red-700 px-4 py-2 font-bold text-white hover:bg-red-800 disabled:opacity-50">{busyId===u.id?"Working…":"Remove"}</button>
                   </div>
                 </td>
               </tr>
             ))}
+            {!filtered.length && <tr><td colSpan={7} className="p-5">No accounts match your search.</td></tr>}
           </tbody>
         </table>
       </div>
