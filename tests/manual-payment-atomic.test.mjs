@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {PGlite} from '@electric-sql/pglite';
+const db=new PGlite();
+await db.exec(`create role anon;create role authenticated;create role service_role;create table profiles(id uuid primary key,email text,full_name text,role text,is_active boolean);create table tournament_registrations(id uuid primary key,email text,entry_fee_cents int,payment_status text,registration_status text,stripe_checkout_session_id text,stripe_payment_intent_id text,updated_at timestamptz);create table payment_records(id uuid default gen_random_uuid(),payment_type text,reference_id uuid,email text,amount_cents int,status text);create table audit_logs(id uuid default gen_random_uuid(),actor_id uuid,action text,entity_type text,entity_id uuid,summary jsonb);`);
+await db.exec(fs.readFileSync('supabase/migration_v4_7_manual_tournament_payment.sql','utf8'));
+const actor='11111111-1111-4111-a111-111111111111',entry='22222222-2222-4222-a222-222222222222';
+await db.query(`insert into profiles values($1,'admin@example.test','Test Admin','admin',true);`,[actor]);
+await db.query(`insert into tournament_registrations(id,email,entry_fee_cents,payment_status,registration_status)values($1,'player@example.test',2000,'pending_payment','pending_payment')`,[entry]);
+await assert.rejects(db.query(`select confirm_manual_tournament_payment($1,$2,'cash','',null)`,[entry,actor]));
+await db.query(`select confirm_manual_tournament_payment($1,$2,'cash','Receipt C123',null)`,[entry,actor]);
+assert.equal((await db.query('select * from payment_records')).rows.length,1);
+const audit=(await db.query('select * from audit_logs')).rows[0];assert.equal(audit.actor_id,actor);assert.equal(audit.summary.reference_or_note,'Receipt C123');
+assert.equal((await db.query('select * from tournament_registrations')).rows[0].registration_status,'confirmed');
+await assert.rejects(db.query(`select confirm_manual_tournament_payment($1,$2,'cash','Again',null)`,[entry,actor]));
+assert.equal((await db.query('select * from payment_records')).rows.length,1);
+await db.query(`update tournament_registrations set payment_status='refunded',registration_status='cancelled'`);await assert.rejects(db.query(`select confirm_manual_tournament_payment($1,$2,'cash','Again',null)`,[entry,actor]));
+await db.close();console.log('Atomic approval audit/ledger/confirmation, required note, repeated approval and refunded-entry rejection passed.');

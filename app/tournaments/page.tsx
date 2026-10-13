@@ -1,3 +1,4 @@
+import NzcfMembershipNote from "@/components/NzcfMembershipNote";
 // Tournament data is managed in admin and must be read on every request.
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export default async function TournamentsPage() {
   }
   const years = Array.from(byYear.keys()).sort((a,b)=>b-a);
 
-  return <PageShell><main className="container-page py-12">
+  return <PageShell><main className="container-page py-12"><NzcfMembershipNote/>
     <div className="mx-auto max-w-5xl rounded-2xl bg-white p-8 shadow-soft">
       <h1 className="text-4xl font-extrabold">Tournaments</h1>
       <p className="mt-4 max-w-3xl text-lg leading-8 text-stone-700">Upcoming and current club tournaments and general/open events. Completed tournaments are moved to the Results page.</p>

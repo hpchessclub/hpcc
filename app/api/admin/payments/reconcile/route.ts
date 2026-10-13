@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const { data: entry, error } = await s.from("tournament_registrations").select("*").eq("id", registration_id).single();
     if (error || !entry) throw new Error("Registration not found.");
     if (!entry.stripe_checkout_session_id) {
-      if (entry.payment_status === "paid" && entry.registration_status === "confirmed" && Number(entry.entry_fee_cents) === 0) {
+      if (entry.payment_status === "paid" && entry.registration_status === "confirmed" && (Number(entry.entry_fee_cents) === 0 || !entry.stripe_payment_intent_id)) {
         const { data: tournament, error } = await s.from("tournaments").select("*").eq("id", entry.tournament_id).single();
         if (error) throw error;
         return NextResponse.json({ status: "confirmed", email_status: await tryTournamentConfirmation(s, entry, tournament) });
@@ -22,7 +22,9 @@ export async function POST(req: Request) {
     }
     const session = await getStripe().checkout.sessions.retrieve(entry.stripe_checkout_session_id);
     if (session.payment_status !== "paid" || session.status !== "complete") return NextResponse.json({ status: "not_paid", message: "Stripe has not confirmed payment. The entry remains unconfirmed." });
-    return NextResponse.json(await confirmTournamentPayment(s, session));
+    const result=await confirmTournamentPayment(s,session);
+    const {revalidatePath}=await import("next/cache");revalidatePath("/club-admin/tournament-registrations","layout");revalidatePath("/tournaments","layout");
+    return NextResponse.json(result);
   } catch (e: any) {
     console.error("Admin payment reconciliation failed", { registration_check_failed: true });
     return NextResponse.json({ error: "Payment could not be reconciled. Check the linked Stripe session, payment mode and Email Diagnostics. No new charge was made." }, { status: 400 });

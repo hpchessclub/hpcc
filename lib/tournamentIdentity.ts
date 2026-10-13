@@ -1,0 +1,2 @@
+import {createHash} from 'node:crypto';
+export function tournamentIdentity(tournamentId:string,player:{first_name:string;last_name:string;email:string;date_of_birth:string}){const normalize=(v:string)=>v.trim().toLowerCase().replace(/\s+/g,' ');const hash=createHash('sha256').update(JSON.stringify([tournamentId,normalize(player.first_name),normalize(player.last_name),normalize(player.email),player.date_of_birth])).digest('hex');return `${hash.slice(0,8)}-${hash.slice(8,12)}-5${hash.slice(13,16)}-a${hash.slice(17,20)}-${hash.slice(20,32)}`;}

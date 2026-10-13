@@ -97,6 +97,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if(loading||confirmed)return;
     setLoading(true);
     setMessage("");
     setPaymentUrl("");

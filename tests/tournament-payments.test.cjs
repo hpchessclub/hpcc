@@ -16,9 +16,9 @@ function fixture() {
   const entry = { id, tournament_id: tid, first_name: 'Test', last_name: 'Player', email: 'test@example.invalid', phone: 'test', entry_fee_cents: 2000, category_name: 'Open', payment_status: 'pending_payment', registration_status: 'pending_payment', stripe_checkout_session_id: 'cs_live_fixture' };
   const tournament = { id: tid, title: 'Fixture tournament', tournament_type:'general_open', status: 'open', allow_public_registration: true, entry_fee_cents: 2000, category_options: [], max_players: 80 };
   const session = { id: 'cs_live_fixture', mode: 'payment', status: 'complete', payment_status: 'paid', livemode: true, currency: 'nzd', amount_total: 2000, payment_intent: 'pi_fixture', metadata: { type: 'tournament_registration', registration_id: id, tournament_id: tid } };
-  let sends = [], failEmail = false;
-  const payment = load('lib/tournamentPayment.ts', { '@/lib/email': { sendEmail: async input => { if (failEmail) throw Error('Email unavailable'); sends.push(input); } }, '@/lib/paymentConfig': config });
-  return { entry, tournament, session, db: new FakeDB(entry, tournament), payment, sends, setFailEmail(v) { failEmail = v; } };
+  let sends = [], failEmail = false, refundCharges=[];
+  const payment = load('lib/tournamentPayment.ts', { '@/lib/stripe': {getStripe:()=>({charges:{list:async()=>({data:refundCharges})}})}, '@/lib/email': { sendEmail: async input => { if (failEmail) throw Error('Email unavailable'); sends.push(input); } }, '@/lib/paymentConfig': config });
+  return { entry, tournament, session, db: new FakeDB(entry, tournament), payment, sends, setRefundCharges(value){refundCharges=value;}, setFailEmail(v) { failEmail = v; } };
 }
 test('production checkout rejects test keys, missing webhook and unsafe return URLs', () => {
   const env = { STRIPE_SECRET_KEY: 'sk_live_fixture', STRIPE_WEBHOOK_SECRET: 'whsec_fixture', VERCEL_ENV: 'production', NEXT_PUBLIC_SITE_URL: 'https://www.hpchessclub.org' };
@@ -170,4 +170,14 @@ test('club events require this player active membership and charge the tournamen
  assert.equal((await route.POST(registrationRequest(f,{first_name:'Someone else',membership_id:'HPCC01001'}),params)).status,400);
  const res=await route.POST(registrationRequest(f,{membership_id:'HPCC01001'}),params);assert.equal(res.status,200);const body=await res.json();assert.equal(body.payment_status,'pending_payment');const saved=f.db.tables.tournament_registrations.at(-1);assert.equal(saved.entry_fee_cents,f.tournament.entry_fee_cents);assert.equal(saved.membership_id,'HPCC01001');assert.equal(saved.registration_status,'pending_payment');
  f.db.tables.club_memberships[0].membership_end_date='2000-01-01';assert.equal((await route.POST(registrationRequest(f,{membership_id:'HPCC01001'}),params)).status,400);
+});
+
+test('full refunded duplicate is cancelled and Stripe completion replay never reactivates it',async()=>{
+ const f=fixture();await f.payment.confirmTournamentPayment(f.db,f.session);
+ f.setRefundCharges([{paid:true,refunded:true,amount:2000,amount_refunded:2000,payment_intent:'pi_fixture'}]);
+ assert.equal((await f.payment.confirmTournamentPayment(f.db,f.session)).status,'refunded');
+ assert.equal(f.db.tables.tournament_registrations[0].registration_status,'cancelled');
+ assert.equal(f.db.tables.payment_records[0].status,'refunded');
+ assert.equal((await f.payment.confirmTournamentPayment(f.db,f.session)).status,'refunded');
+ assert.equal(f.sends.length,1);
 });

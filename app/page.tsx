@@ -1,3 +1,4 @@
+import NzcfMembershipNote from "@/components/NzcfMembershipNote";
 // Tournament data is managed in admin and must be read on every request.
 export const dynamic = "force-dynamic";
 
@@ -49,7 +50,7 @@ export default async function HomePage() {
             </div>
             <Link href="/tournaments" className="shrink-0 text-sm font-bold text-black">View All</Link>
           </div>
-          <UpcomingClubTournaments />
+          <NzcfMembershipNote/><UpcomingClubTournaments />
           {(tournaments || []).length > 0 ? <HomeTournamentsList tournaments={tournaments || []} /> : <div className="card p-5 text-sm text-stone-600">General/open tournaments will appear here when published.</div>}
         </section>
         <section>

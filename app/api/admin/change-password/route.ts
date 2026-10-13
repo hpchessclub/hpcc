@@ -1,3 +1,4 @@
+import {clearAdminActivity} from "@/lib/adminSession";
 import { NextResponse } from 'next/server';
 import { getCurrentAdmin } from '@/lib/auth';
 import { canAccess } from '@/lib/roles';
@@ -22,6 +23,8 @@ export async function POST(req: Request) {
       return NextResponse.json({error:message},{status:400});
     }
     if (!data.user || data.user.id !== admin.user.id) return NextResponse.json({error:'Password update could not be verified. Please sign in again.'},{status:400});
+    await supabase.auth.signOut({scope:'local'});
+    await clearAdminActivity();
     return NextResponse.json({ok:true},{headers:{'Cache-Control':'no-store'}});
   } catch { return NextResponse.json({error:'Unable to change your password. Please try again.'},{status:500}); }
 }

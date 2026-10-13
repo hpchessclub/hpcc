@@ -1,3 +1,4 @@
+import {tournamentIdentity} from "@/lib/tournamentIdentity";
 import { validDateOfBirth } from "@/lib/registrationValidation";
 import { notifyRegistrationReceived } from "@/lib/registrationNotification";
 import { NextResponse } from "next/server";
@@ -69,7 +70,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     if (requiresPayment) assertPaymentReady();
 
+    const escape=(value:string)=>value.replace(/[\\%_]/g,"\\$&");
+    const {data:duplicates,error:duplicateError}=await s.from("tournament_registrations").select("id,payment_status,registration_status,stripe_checkout_session_id").eq("tournament_id",id).ilike("email",escape(body.email)).ilike("first_name",escape(body.first_name)).ilike("last_name",escape(body.last_name)).eq("date_of_birth",body.date_of_birth);
+    if(duplicateError)throw duplicateError;
+    if(duplicates?.some(entry=>entry.registration_status!=="cancelled"&&entry.payment_status!=="refunded"))return NextResponse.json({error:"An entry already exists for this player and tournament. Do not register or pay again. Contact the club to check the existing payment or resume registration."},{status:409});
+    const registrationId=tournamentIdentity(id,body);
+    const {data:previous,error:previousError}=await s.from("tournament_registrations").select("id").eq("id",registrationId).maybeSingle();
+    if(previousError)throw previousError;
+    if(previous)return NextResponse.json({error:"A previous entry exists, including its refund history. Contact the club before creating another registration."},{status:409});
     const { data: registration, error } = await s.from("tournament_registrations").insert({
+      id:registrationId,
       tournament_id: id,
       membership_id: membership?.membership_id || null,
       is_member_registration: !!membership,
@@ -99,6 +109,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       payment_status: requiresPayment ? "pending_payment" : "paid",
       registration_status: requiresPayment ? "pending_payment" : "confirmed",
     }).select().single();
+    if (error?.code==="23505")return NextResponse.json({error:"An entry is already being created for this player. Do not submit or pay again."},{status:409});
     if (error) throw error;
 
     savedRegistrationId = registration.id;
@@ -115,7 +126,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       success_url: `${site}/payment/success?type=tournament&registration_id=${registration.id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${site}/payment/cancel?type=tournament&registration_id=${registration.id}`,
       metadata: { type: "tournament_registration", registration_id: registration.id, tournament_id: id },
-    });
+    }, {idempotencyKey:`hpcc-entry-${registration.id}`});
 
     const { error: sessionSaveError } = await s.from("tournament_registrations").update({ stripe_checkout_session_id: session.id, updated_at: new Date().toISOString() }).eq("id", registration.id);
     if (sessionSaveError || !session.url) {

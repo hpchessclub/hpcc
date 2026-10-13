@@ -1,3 +1,4 @@
+import NzcfMembershipNote from "@/components/NzcfMembershipNote";
 export const dynamic = "force-dynamic";
 import PageShell from "@/components/PageShell";
 import TournamentRegistrationForm from "@/components/TournamentRegistrationForm";
@@ -9,5 +10,5 @@ export default async function RegisterPage({ params }: { params: Promise<{ slug:
   const service = createSupabaseServiceClient();
   const { data: tournament } = await service.from("tournaments").select("*").eq("slug", slug).maybeSingle();
   if (!tournament || tournament.status !== "open" || (!tournament.allow_public_registration && tournament.tournament_type !== "club_calendar")) notFound();
-  return <PageShell><main className="container-page py-12"><TournamentRegistrationForm tournament={tournament} /></main></PageShell>
+  return <PageShell><main className="container-page py-12"><NzcfMembershipNote/><TournamentRegistrationForm tournament={tournament} /></main></PageShell>
 }

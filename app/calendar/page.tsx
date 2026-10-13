@@ -1,3 +1,4 @@
+import NzcfMembershipNote from "@/components/NzcfMembershipNote";
 // Tournament data is managed in admin and must be read on every request.
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function CalendarPage(){
 
   return <PageShell><main className="container-page py-12">
     <div className="mx-auto max-w-5xl rounded-2xl bg-white p-8 shadow-soft">
-      <h1 className="font-serif text-3xl font-bold tracking-tight sm:text-4xl">{pageTitle}</h1>
+      <h1 className="font-serif text-3xl font-bold tracking-tight sm:text-4xl">{pageTitle}</h1><NzcfMembershipNote/>
       <p className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-8 text-stone-700">{description}</p>
       <p className="mt-4 text-sm text-stone-600">Calendar items link to the configured tournament details where available.</p>
 

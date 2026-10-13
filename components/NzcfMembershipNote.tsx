@@ -1,0 +1,1 @@
+export default function NzcfMembershipNote(){return <p className="my-4 rounded-lg border border-hpcc-blue/20 bg-hpcc-accent p-4 text-sm font-semibold text-hpcc-navy">All tournament participants must be members of the New Zealand Chess Federation (NZCF). Please ensure your NZCF membership is current before playing.</p>;}

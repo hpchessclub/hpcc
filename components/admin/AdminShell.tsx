@@ -1,9 +1,10 @@
+import AdminIdleSession from "@/components/admin/AdminIdleSession";
 import Link from "next/link";
 import Image from "next/image";
 import AdminNav from "@/components/admin/AdminNav";
 import { displayName } from "@/lib/auth";
 export default function AdminShell({ admin, children }: { admin: any; children: React.ReactNode }) {
-  return <div className="min-h-screen bg-stone-100">
+  return <div className="min-h-screen bg-stone-100"><AdminIdleSession/>
     <header className="sticky top-0 z-30 bg-black text-white shadow-sm">
       <div className="flex items-center justify-between px-5 py-3">
         <Link href="/club-admin/dashboard" className="flex items-center gap-3">

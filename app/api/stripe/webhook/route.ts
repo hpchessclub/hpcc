@@ -1,3 +1,4 @@
+import {syncTournamentRefund} from "@/lib/tournamentRefund";
 import { confirmMembershipRenewal } from "@/lib/membershipRenewal";
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
@@ -17,21 +18,25 @@ export async function POST(req: Request) {
   try {
     const s = createSupabaseServiceClient();
     const session = event.data.object as any;
+    if(event.type==="charge.refunded"){
+      if(paymentConfiguration().production&&!session.livemode)throw new Error("Test refund in production");
+      await syncTournamentRefund(s,session);return NextResponse.json({received:true});
+    }
     const type = session.metadata?.type;
     const successful = ["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(event.type);
     if (successful && session.payment_status === "paid") {
       if (paymentConfiguration().production && !session.livemode) throw new Error("Test payment received in production");
       if (type === "tournament_registration") {
         const result = await confirmTournamentPayment(s, session);
-        if (result.email_status !== "sent") throw new Error("Confirmation email pending; retry delivery");
+        if (result.status!=="refunded" && result.email_status !== "sent") throw new Error("Confirmation email pending; retry delivery");
       }
       if (type === "membership_renewal") {
         const result = await confirmMembershipRenewal(s, session);
-        if (result.email_status !== "sent") throw new Error("Renewal email pending; retry delivery");
+        if (result.status!=="refunded" && result.email_status !== "sent") throw new Error("Renewal email pending; retry delivery");
       }
       if (type === "membership") {
         const result = await confirmMembershipPayment(s, session);
-        if (result.email_status !== "sent") throw new Error("Membership email pending; retry delivery");
+        if (result.status!=="refunded" && result.email_status !== "sent") throw new Error("Membership email pending; retry delivery");
       }
     }
     if (["checkout.session.expired", "checkout.session.async_payment_failed"].includes(event.type)) {

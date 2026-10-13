@@ -1,12 +1,14 @@
+import {readAdminActivity} from "@/lib/adminSession";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { AdminArea, canAccess } from "@/lib/roles";
 
-export async function getCurrentAdmin() {
+export async function getCurrentAdmin(options: {establishSession?:boolean} = {}) {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
+  if(!options.establishSession && !(await readAdminActivity(user.id)))return null;
   const service = createSupabaseServiceClient();
   const { data: profile } = await service
     .from("profiles")
@@ -19,7 +21,7 @@ export async function getCurrentAdmin() {
 
 export async function requireAdmin(area: AdminArea = "dashboard") {
   const admin = await getCurrentAdmin();
-  if (!admin) redirect("/club-admin/login");
+  if (!admin) redirect("/club-admin/login?reason=session_expired");
   if (!canAccess(admin.profile.role, area)) redirect("/club-admin/login?error=permission");
   return admin;
 }

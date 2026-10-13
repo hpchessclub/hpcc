@@ -1,3 +1,4 @@
+import {checkTournamentRefund} from "@/lib/tournamentRefund";
 import { emailTextHtml } from "@/lib/emailTemplate";
 import { createHash } from "node:crypto";
 import { sendEmail } from "@/lib/email";
@@ -35,7 +36,7 @@ export async function sendTournamentConfirmation(s: any, registration: any, tour
   try {
     const eventDate = tournament.date_display || (tournament.start_date ? new Date(tournament.start_date).toLocaleString("en-NZ", { timeZone: "Pacific/Auckland" }) : "");
     const venue = tournament.venue_name || tournament.venue || "";
-    const confirmationText = `Hello ${registration.first_name},\n\nYour entry for ${tournament.title} is confirmed.\n\nPlayer: ${registration.first_name} ${registration.last_name}\nCategory: ${registration.category_name || "General Entry"}\nEntry fee: NZ$${(Number(registration.entry_fee_cents || 0) / 100).toFixed(2)}\nReference: ${registration.id}\n${eventDate ? `Date: ${eventDate}\n` : ""}${venue ? `Venue: ${venue}\n` : ""}${tournament.venue_address ? `Address: ${tournament.venue_address}\n` : ""}\nView tournaments: ${paymentConfiguration().siteUrl || "https://www.hpchessclub.org"}/tournaments\n\nFor help, contact hpchess.winnie@gmail.com.\n\nHowick-Pakuranga Chess Club`;
+    const confirmationText = `Hello ${registration.first_name},\n\nYour entry for ${tournament.title} is confirmed.\n\nPlayer: ${registration.first_name} ${registration.last_name}\nCategory: ${registration.category_name || "General Entry"}\nEntry fee: NZ$${(Number(registration.entry_fee_cents || 0) / 100).toFixed(2)}\nReference: ${registration.id}\n${eventDate ? `Date: ${eventDate}\n` : ""}${venue ? `Venue: ${venue}\n` : ""}${tournament.venue_address ? `Address: ${tournament.venue_address}\n` : ""}\nAll participants must have current New Zealand Chess Federation (NZCF) membership.\n\nView tournaments: ${paymentConfiguration().siteUrl || "https://www.hpchessclub.org"}/tournaments\n\nFor help, contact hpchess.winnie@gmail.com.\n\nHowick-Pakuranga Chess Club`;
     const text = outcome === "confirmed" ? confirmationText : `Hello ${registration.first_name},\n\nStripe reported that payment for ${tournament.title} was unsuccessful. Your entry is not confirmed.\n\nReference: ${registration.id}\n\nIf your bank shows a payment, do not pay again. Contact hpchess.winnie@gmail.com with this reference so we can check it.\n\nHowick-Pakuranga Chess Club`;
     await sendEmail({ to: registration.email, subject: `${outcome === "confirmed" ? "Entry confirmed" : "Payment unsuccessful"} — ${tournament.title}`, text, html: emailTextHtml(text) });
     check(await s.from("email_delivery_logs").update({ status: "sent", sent_at: new Date().toISOString(), error_message: null }).eq("id", logId));
@@ -51,6 +52,9 @@ export async function confirmTournamentPayment(s: any, session: any) {
   const id = session.metadata?.registration_id;
   if (!id) throw new Error("Registration reference missing.");
   const existing = check(await s.from("tournament_registrations").select("*").eq("id", id).single());
+  validateTournamentPayment(session,{...existing,payment_status:"paid",registration_status:"confirmed"});
+  const refund=await checkTournamentRefund(s,session);
+  if(refund)return {registration_id:id,...refund,email_status:"not_sent"};
   validateTournamentPayment(session, existing);
   const paymentIntent = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || "";
   const registration = check(await s.from("tournament_registrations").update({ payment_status: "paid", registration_status: "confirmed", stripe_checkout_session_id: session.id, stripe_payment_intent_id: paymentIntent, updated_at: new Date().toISOString() }).eq("id", id).in("payment_status", ["pending_payment", "failed", "expired", "paid"]).neq("registration_status", "cancelled").select("*").single());

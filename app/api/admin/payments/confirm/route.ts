@@ -1,0 +1,18 @@
+import {NextResponse} from 'next/server';import {revalidatePath} from 'next/cache';
+import {getCurrentAdmin} from '@/lib/auth';import {createSupabaseServiceClient} from '@/lib/supabase/service';import {getStripe} from '@/lib/stripe';import {tryTournamentConfirmation} from '@/lib/tournamentPayment';
+export async function POST(req:Request){
+ const admin=await getCurrentAdmin();if(!admin||!['admin','super_admin'].includes(admin.profile.role))return NextResponse.json({error:'Admin or Super Admin required.'},{status:403});
+ try{const {id,method,note}=await req.json();if(typeof id!=='string'||!['cash','bank_transfer','manual_verified'].includes(method)||typeof note!=='string'||note.trim().length<3||note.length>2000)throw new Error('Select a payment method and enter a reference or note (3–2,000 characters).');
+ const s=createSupabaseServiceClient();const {data:entry,error}=await s.from('tournament_registrations').select('*').eq('id',id).single();if(error||!entry)throw new Error('Registration not found.');
+ if(!['pending_payment','failed','expired'].includes(entry.payment_status)||entry.registration_status==='cancelled')throw new Error('Paid, refunded or cancelled entries cannot be manually confirmed.');
+ if(entry.stripe_payment_intent_id)throw new Error('Use Stripe verification for the linked Stripe payment.');
+ const setup=await s.rpc('confirm_manual_tournament_payment',{p_registration_id:'00000000-0000-0000-0000-000000000000',p_actor_id:admin.user.id,p_method:'cash',p_note:'',p_checkout:null});
+ if(setup.error?.code==='PGRST202')throw new Error('Manual payment setup is required: run supabase/migration_v4_7_manual_tournament_payment.sql in HPCC Supabase.');
+ if(!setup.error||setup.error.message!=='Payment method and reference or note are required')throw new Error('Manual approval configuration could not be verified. No checkout was changed.');
+ if(entry.stripe_checkout_session_id){const stripe=getStripe();const session=await stripe.checkout.sessions.retrieve(entry.stripe_checkout_session_id);if(session.status==='complete'||session.payment_status==='paid')throw new Error('Stripe checkout completed. Use Stripe verification; do not approve a manual payment.');if(session.status==='open'){const expired=await stripe.checkout.sessions.expire(session.id);if(expired.status!=='expired')throw new Error('Checkout could not be expired safely.');}else if(session.status!=='expired')throw new Error('Unknown checkout state. Verify with Stripe first.');}
+ const {data:registration,error:approvalError}=await s.rpc('confirm_manual_tournament_payment',{p_registration_id:id,p_actor_id:admin.user.id,p_method:method,p_note:note.trim(),p_checkout:entry.stripe_checkout_session_id||null});
+ if(approvalError){if(approvalError.code==='PGRST202')throw new Error('Manual payment setup is required: run supabase/migration_v4_7_manual_tournament_payment.sql in HPCC Supabase.');throw new Error(approvalError.message);}if(!registration||registration.payment_status!=='paid'||registration.registration_status!=='confirmed')throw new Error('Payment approval could not be verified.');
+ const {data:tournament}=await s.from('tournaments').select('*').eq('id',registration.tournament_id).single();const email_status=tournament?await tryTournamentConfirmation(s,registration,tournament):'failed';
+ revalidatePath('/club-admin/tournament-registrations','layout');revalidatePath('/tournaments','layout');return NextResponse.json({ok:true,email_status,message:`Entry confirmed. Approved by ${admin.profile.full_name||admin.user.email}. Confirmation email ${email_status}.`});
+ }catch(e){return NextResponse.json({error:e instanceof Error?e.message:'Unable to confirm payment.'},{status:400});}
+}
