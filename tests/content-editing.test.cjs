@@ -17,3 +17,12 @@ test('shared public preview renderer formats content and blocks unsafe HTML and 
  assert.ok(html.includes('<strong>Welcome</strong>'));assert.ok(html.includes('<ul'));assert.ok(html.includes('Club notice'));
  assert.ok(!html.includes('<script>'));assert.ok(!html.includes('href="javascript:'));
 });
+
+test('adding sections keeps existing content and photo Markdown unchanged',()=>{
+ const {addContentSection}=require('./payment-helpers.cjs').load('lib/contentEditing.ts');
+ const original='Existing report\n\n![Club photo](https://example.invalid/photo.jpg)';
+ const appended=addContentSection(original,'2027 update','New results');
+ assert.ok(appended.startsWith(original));assert.ok(appended.endsWith('## 2027 update\n\nNew results'));
+ const prepended=addContentSection(original,'Latest','New paragraph','start');
+ assert.ok(prepended.endsWith(original));assert.throws(()=>addContentSection(original,'Title','   '));
+});

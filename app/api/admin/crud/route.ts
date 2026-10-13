@@ -117,6 +117,7 @@ export async function POST(req: Request){
     if(error) return NextResponse.json({error:error.message},{status:400});
     await maybeCreateSocialDraft(s, table, data, clean, admin.user.id);
     await maybeCreateNewsFromSocial(s, table, data, clean, admin.user.id);
+    if(table==="membership_options"){revalidatePath("/join");revalidatePath("/club-admin/membership-options");}
     return NextResponse.json({data});
   }
   if(action==='update'){
@@ -124,6 +125,7 @@ export async function POST(req: Request){
     if(error) return NextResponse.json({error:error.message},{status:400});
     await maybeCreateSocialDraft(s, table, data, clean, admin.user.id);
     await maybeCreateNewsFromSocial(s, table, data, clean, admin.user.id);
+    if(table==="membership_options"){revalidatePath("/join");revalidatePath("/club-admin/membership-options");}
     return NextResponse.json({data});
   }
   if(action==='delete'){
@@ -135,6 +137,7 @@ export async function POST(req: Request){
       revalidatePath('/live-boards');
       revalidatePath('/club-admin/live-boards');
     }
+    if(table==="membership_options"){revalidatePath("/join");revalidatePath("/club-admin/membership-options");}
     return NextResponse.json({ok:true, deleted_id:id});
   }
   return NextResponse.json({error:'Invalid action'},{status:400});

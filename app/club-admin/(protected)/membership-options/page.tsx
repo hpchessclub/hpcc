@@ -7,7 +7,7 @@ export default async function MembershipOptionsAdmin(){
   const s=createSupabaseServiceClient();
   const {data, error}=await s.from("membership_options").select("*").order("display_order",{ascending:true}).order("created_at",{ascending:true});
   if (error) throw new Error("Unable to load membership fees.");
-  return <div><p className="mb-5 rounded-lg bg-blue-50 p-4">Add or edit membership fees below. Active options appear on Join Now and renewal checkout immediately. Fees are entered in dollars; completed or pending payments keep their original fee. Set a calendar end month (1–12), or leave it blank to use rolling validity months.</p><CrudManager table="membership_options" title="Membership Options and Fees" rows={data||[]} fields={[
+  return <div><p className="mb-5 rounded-lg bg-blue-50 p-4">Add or edit membership fees below. Only options marked Active / show on Join page appear publicly. Their names, descriptions and prices appear on Join and renewal checkout. Inactive options remain hidden. Fees are entered in dollars; completed or pending payments keep their original fee. Set a calendar end month (1–12), or leave it blank to use rolling validity months.</p><a className="mb-5 inline-block font-bold underline" href="/join" target="_blank" rel="noreferrer">View public membership options ↗</a><CrudManager table="membership_options" title="Membership Options and Fees" rows={data||[]} fields={[
     {name:'name',label:'Membership option name',required:true},
     {name:'key',label:'Internal key - optional'},
     {name:'description',label:'Description',textarea:true},

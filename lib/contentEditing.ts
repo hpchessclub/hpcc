@@ -16,3 +16,11 @@ export function formatSelection(value:string,start:number,end:number,kind:string
   return {value:value.slice(0,start)+text+value.slice(end),start,end:start+text.length};
 }
 export const CONTENT_PREVIEW_TABLES = ["news_posts","coaches","coaching_topics","social_posts","agm_meetings","agm_decisions","elected_team_members"];
+
+export function addContentSection(existing:string,title:string,text:string,position:"start"|"end"="end"){
+ const heading=title.trim().replace(/[\r\n]/g," ");const content=text.trim();
+ if(!content)throw new Error("Enter some text for the new section.");
+ const addition=[heading?`## ${heading}`:"",content].filter(Boolean).join("\n\n");
+ if(!existing)return addition;
+ return position==="start"?`${addition}\n\n${existing}`:`${existing}\n\n${addition}`;
+}
