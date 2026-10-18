@@ -117,7 +117,7 @@ export default function UsersManager() {
           </thead>
           <tbody>
             {filtered.map((u) => (
-              <tr key={u.id} className="border-t align-top">
+              <tr key={`${u.id}:${u.updated_at}:${u.role}:${u.is_active}`} className="border-t align-top">
                 <td className="p-3"><input defaultValue={u.first_name || ""} id={`first-${u.id}`} className="admin-input w-32" /></td>
                 <td className="p-3"><input defaultValue={u.last_name || ""} id={`last-${u.id}`} className="admin-input w-32" /></td>
                 <td className="p-3">{u.email}{!u.has_profile&&<p className="mt-1 text-xs text-amber-800">Missing profile — assign role and Save</p>}{!u.has_auth&&<p className="mt-1 text-xs text-amber-800">Profile only — login missing</p>}</td>
