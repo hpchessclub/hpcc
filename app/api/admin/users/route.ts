@@ -38,6 +38,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if(req.headers.get("origin")!==new URL(req.url).origin)return NextResponse.json({error:"Invalid request origin."},{status:403});
   const admin = await requireSuperAdmin();
   if (!admin) return NextResponse.json({ error: "Super Admin only" }, { status: 403 });
   const body = await req.json();
@@ -82,12 +83,13 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if(req.headers.get("origin")!==new URL(req.url).origin)return NextResponse.json({error:"Invalid request origin."},{status:403});
   const admin = await requireSuperAdmin();
   if (!admin) return NextResponse.json({ error: "Super Admin only" }, { status: 403 });
   const url = new URL(req.url);
   const id = url.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing user id." }, { status: 400 });
-  if (id === admin.profile.id) return NextResponse.json({ error: "You cannot delete your own Super Admin account while logged in." }, { status: 400 });
+  if (id === admin.user.id) return NextResponse.json({ error: "You cannot delete your own Super Admin account while logged in." }, { status: 400 });
   const s = createSupabaseServiceClient();
   const {data:target,error:lookupError}=await s.auth.admin.getUserById(id);
   if(lookupError && lookupError.status!==404)return NextResponse.json({error:lookupError.message},{status:400});
