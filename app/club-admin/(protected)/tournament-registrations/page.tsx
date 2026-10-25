@@ -43,7 +43,7 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-3xl font-extrabold">Tournament Registrations</h1><a href={`/club-admin/tournament-registrations/players${sp.tournament_id ? `?tournament_id=${encodeURIComponent(sp.tournament_id)}` : ""}`} className="btn-secondary">Player / Vega Report</a></div>
-      <p className="mt-2 text-stone-600">Choose filters and columns before exporting. Public entries show only paid and confirmed players.</p>
+      <p className="mt-2 text-stone-600">Choose filters and columns before exporting. Public entries show only paid and confirmed players. Tentative bank transfers reserve no place. Choose Payment Method, Bank Reference, Last Payment Reminder and Payment Status Explanation in report columns.</p>
 
       <PaymentDiagnostics />
       <form className="card mt-5 space-y-5 p-5">

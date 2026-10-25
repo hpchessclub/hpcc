@@ -1,3 +1,5 @@
+import {bankRegistration} from "@/lib/bankRegistration";
+import {registrationPolicy,recordPolicy} from "@/lib/registrationPolicies";
 import {tournamentIdentity} from "@/lib/tournamentIdentity";
 import { validDateOfBirth } from "@/lib/registrationValidation";
 import { notifyRegistrationReceived } from "@/lib/registrationNotification";
@@ -44,6 +46,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (countError) throw countError;
     if (tournament.max_players && Number(count || 0) >= Number(tournament.max_players)) return NextResponse.json({ error: "Tournament has reached maximum players" }, { status: 400 });
 
+    let policy;try{policy=registrationPolicy(body,tournament);}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Invalid consent"},{status:400});}
     const isClubCalendar = tournament.tournament_type === "club_calendar";
 
     let membership: any = null;
@@ -68,17 +71,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const requiresPayment = !(isClubCalendar && tournament.require_payment === false && entryFeeCents === 0);
     if (requiresPayment && entryFeeCents <= 0) return NextResponse.json({ error: "This tournament requires payment, but no fee has been configured. Please contact the club." }, { status: 400 });
 
-    if (requiresPayment) assertPaymentReady();
+    if (requiresPayment&&body.payment_method!=="bank_transfer") assertPaymentReady();
 
     const escape=(value:string)=>value.replace(/[\\%_]/g,"\\$&");
     const {data:duplicates,error:duplicateError}=await s.from("tournament_registrations").select("id,payment_status,registration_status,stripe_checkout_session_id").eq("tournament_id",id).ilike("email",escape(body.email)).ilike("first_name",escape(body.first_name)).ilike("last_name",escape(body.last_name)).eq("date_of_birth",body.date_of_birth);
     if(duplicateError)throw duplicateError;
-    if(duplicates?.some(entry=>entry.registration_status!=="cancelled"&&entry.payment_status!=="refunded"))return NextResponse.json({error:"An entry already exists for this player and tournament. Do not register or pay again. Contact the club to check the existing payment or resume registration."},{status:409});
+    if(body.payment_method!=="bank_transfer"&&duplicates?.some(entry=>entry.registration_status!=="cancelled"&&entry.payment_status!=="refunded"))return NextResponse.json({error:"An entry already exists for this player and tournament. Do not register or pay again. Contact the club to check the existing payment or resume registration."},{status:409});
     const registrationId=tournamentIdentity(id,body);
     const {data:previous,error:previousError}=await s.from("tournament_registrations").select("id").eq("id",registrationId).maybeSingle();
     if(previousError)throw previousError;
-    if(previous)return NextResponse.json({error:"A previous entry exists, including its refund history. Contact the club before creating another registration."},{status:409});
-    const { data: registration, error } = await s.from("tournament_registrations").insert({
+    if(previous&&body.payment_method!=="bank_transfer")return NextResponse.json({error:"A previous entry exists, including its refund history. Contact the club before creating another registration."},{status:409});
+    const payload={
       id:registrationId,
       tournament_id: id,
       membership_id: membership?.membership_id || null,
@@ -108,12 +111,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       entry_fee_cents: entryFeeCents,
       payment_status: requiresPayment ? "pending_payment" : "paid",
       registration_status: requiresPayment ? "pending_payment" : "confirmed",
-    }).select().single();
+    };
+    if(body.payment_method==='bank_transfer'&&requiresPayment){
+      const {data:prior,error:priorError}=await s.from('tournament_registrations').select('*').eq('id',registrationId).maybeSingle();if(priorError)throw priorError;
+      if(duplicates?.length&&!prior)throw new Error('An existing entry needs review. Do not register or pay again.');
+      return NextResponse.json(await bankRegistration(s,'tournament',registrationId,payload,policy,tournament));
+    }
+    const { data: registration, error }=await s.from('tournament_registrations').insert({...payload,payment_status:'pending_payment',registration_status:'pending_payment'}).select().single();
     if (error?.code==="23505")return NextResponse.json({error:"An entry is already being created for this player. Do not submit or pay again."},{status:409});
     if (error) throw error;
 
+    await recordPolicy(s,registration.id,'tournament',policy);
     savedRegistrationId = registration.id;
     if (!requiresPayment) {
+      const confirmed=await s.from('tournament_registrations').update({payment_status:'paid',registration_status:'confirmed',updated_at:new Date().toISOString()}).eq('id',registration.id).eq('payment_status','pending_payment').select('*').single();if(confirmed.error||!confirmed.data)throw new Error('Free entry could not be confirmed.');Object.assign(registration,confirmed.data);
       const emailStatus = await tryTournamentConfirmation(s, registration, tournament);
       return NextResponse.json({ ok: true, registration_id: registration.id, payment_status: "paid", registration_status: "confirmed", email_status: emailStatus, message: "Free club registration confirmed. No payment is required." });
     }

@@ -1,18 +1,8 @@
-import { createHash } from "node:crypto";
-import { sendEmail } from "@/lib/email";
-// Acknowledgement has a separate log from the payment-confirmed email.
-export async function notifyRegistrationReceived(s: any, record: any, kind: "membership" | "tournament", title?: string) {
- const hash = createHash("sha256").update(`registration-received:${kind}:${record.id}`).digest("hex");
- const id = `${hash.slice(0,8)}-${hash.slice(8,12)}-${hash.slice(12,16)}-${hash.slice(16,20)}-${hash.slice(20,32)}`;
- try {
-  const { error } = await s.from("email_delivery_logs").insert({ id, recipient_email: record.email, recipient_name: `${record.first_name} ${record.last_name}`, status: "queued" });
-  if (error) { if (error.code === "23505") return "pending"; throw error; }
-  const text = `Hello ${record.first_name},\n\nWe received your ${kind === "membership" ? "Howick-Pakuranga membership registration" : `registration for ${title || "the tournament"}`}.\n\nPlayer: ${record.first_name} ${record.last_name}\nReference: ${record.id}\nStatus: Pending payment\n\nRegistration is not confirmed until payment is completed. You will receive a separate confirmation after payment is verified. ${kind === "tournament" ? "Tournament fees are separate from membership fees and apply to club members too. " : ""}If you already paid, do not pay again; contact the club with your reference.\n\nHowick-Pakuranga Chess Club`;
-  await sendEmail({ to: record.email, subject: `Registration received — ${kind === "membership" ? "Howick-Pakuranga membership" : title || "Tournament"}`, text, html: `<p>${text.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]!)).replace(/\n/g,'<br>')}</p>` });
-  const result = await s.from("email_delivery_logs").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", id); if (result.error) throw result.error;
-  return "sent";
- } catch {
-  await s.from("email_delivery_logs").update({ status: "failed", error_message: "Registration acknowledgement email failed. Check Email Diagnostics. Payment confirmation is sent separately." }).eq("id", id);
-  return "failed";
- }
+import {createHash} from 'node:crypto';import {sendEmail} from '@/lib/email';import {emailTextHtml} from '@/lib/emailTemplate';
+export async function notifyRegistrationReceived(s:any,record:any,kind:'membership'|'tournament',title?:string){
+ const hash=createHash('sha256').update(`registration-received:${kind}:${record.id}`).digest('hex');const id=`${hash.slice(0,8)}-${hash.slice(8,12)}-${hash.slice(12,16)}-${hash.slice(16,20)}-${hash.slice(20,32)}`;
+ try{const insert=await s.from('email_delivery_logs').insert({id,recipient_email:record.email,recipient_name:`${record.first_name} ${record.last_name}`,status:'queued'});if(insert.error){if(insert.error.code!=='23505')throw insert.error;const {data:prior,error}=await s.from('email_delivery_logs').select('*').eq('id',id).single();if(error)throw error;if(prior.status==='sent')return 'sent';if(prior.status==='queued')return 'pending';const claim=await s.from('email_delivery_logs').update({status:'queued',error_message:null}).eq('id',id).eq('status','failed').select('id').maybeSingle();if(claim.error)throw claim.error;if(!claim.data)return 'pending';}
+ const bank=record.bank_instructions;const text=[`Hello ${record.first_name},`,'',`We received your ${kind==='membership'?'HPCC membership registration':`registration for ${title||'the tournament'}`}.`,`Player: ${record.first_name} ${record.last_name}`,`Reference: ${bank?.reference||record.id}`,bank?'Status: Tentative — bank transfer':'Status: Pending payment','',...(bank?[`Account name: ${bank.name}`,`Account number: ${bank.account_number}`,`Amount: NZ$${(Number(bank.amount_cents)/100).toFixed(2)}`,`Bank reference: ${bank.reference}`,'This does not reserve a place. Your entry is tentative until the club verifies full payment.']:['Registration is not confirmed until payment is verified. If you already paid, do not pay again.']),'','Payment confirmation is a separate email.','Howick-Pakuranga Chess Club'].join('\n');
+ await sendEmail({to:record.email,subject:`Registration received — ${kind==='membership'?'HPCC membership':title||'Tournament'}`,text,html:emailTextHtml(text)});const {error}=await s.from('email_delivery_logs').update({status:'sent',sent_at:new Date().toISOString(),error_message:null}).eq('id',id);if(error)throw error;return 'sent';
+ }catch{await s.from('email_delivery_logs').update({status:'failed',error_message:'Acknowledgement send failed. Sent status is not delivery/open tracking.'}).eq('id',id);return 'failed';}
 }

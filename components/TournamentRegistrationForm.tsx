@@ -1,4 +1,6 @@
 "use client";
+import RegistrationPolicies from "@/components/RegistrationPolicies";
+import BankInstructions from "@/components/BankInstructions";
 
 import { useEffect, useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format";
@@ -40,6 +42,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
   const [paymentMode, setPaymentMode] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [paymentAvailable, setPaymentAvailable] = useState(true);
+  const [bank,setBank]=useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -111,6 +114,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
       });
       const json = await res.json();
       if (!res.ok) { setMessage(json.error || "Your registration is not confirmed. If payment was taken, do not pay again; contact hpchess.winnie@gmail.com."); return; }
+      if(json.tentative){setBank(json.bank_instructions);setConfirmed(true);setMessage(json.message);return;}
       if (json.url) {
         setPaymentUrl(json.url);
         setMessage(`Entry reference: ${json.registration_id}. Your entry is pending payment. Redirecting to secure checkout...`);
@@ -137,7 +141,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
         </div>
       ) : (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <b>Payment required:</b> your tournament entry is <b>not confirmed</b> until Stripe payment is successfully completed.
+          <b>Payment required:</b> your tournament entry is <b>not confirmed</b> until Stripe payment is verified or the club confirms receipt of your bank transfer.
           If you close or cancel the payment page, your entry will remain as <b>Pending Payment</b> and will not appear in the public entries list.
         </div>
       )}
@@ -244,8 +248,8 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
           Open payment page
         </a>
       )}
-      <button disabled={loading || confirmed || (!isFreeClubEvent && fee <= 0) || (fee > 0 && !paymentAvailable) || (isClubCalendar && !member)} className="btn-primary mt-6">
-        {confirmed ? "Registration Confirmed" : loading ? "Submitting..." : isFreeClubEvent ? "Register Free" : "Continue to Payment"}
+      <RegistrationPolicies policy={tournament.registration_policy} free={isFreeClubEvent}/><BankInstructions instructions={bank}/><button disabled={loading || confirmed || (!isFreeClubEvent && fee <= 0) || false || (isClubCalendar && !member)} className="btn-primary mt-6">
+        {bank?"Tentative entry saved":confirmed ? "Registration Confirmed" : loading ? "Submitting..." : isFreeClubEvent ? "Register Free" : "Continue to Payment"}
       </button>
       {isClubCalendar && !member && <p className="mt-2 text-xs text-slate-500">Use Find Member first so the form can populate active membership details.</p>}
     </form>

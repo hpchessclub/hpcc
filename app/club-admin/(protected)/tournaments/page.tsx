@@ -13,7 +13,7 @@ export default async function TournamentsAdmin(){
   const fields:any[] = [
     {name:'title',label:'Tournament name',required:true},
     {name:'slug',label:'Slug'},
-    {name:'description',label:'Description',textarea:true},
+    {name:'description',label:'Description',textarea:true},{name:'registration_policy',label:'Cancellation/refund policy (v4_8 setup required)',textarea:true},
     {name:'status',label:'Status',options:['draft','open','closed','completed','archived']},
     {name:'tournament_type',label:'Tournament type',options:['club_calendar','general_open'],help:'Club events require active membership. General/open events welcome everyone. All tournament entrants pay the configured fee, including members.'},
     {name:'show_in_calendar',label:'Show in Calendar',type:'checkbox'},

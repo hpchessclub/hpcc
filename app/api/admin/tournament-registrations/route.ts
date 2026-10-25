@@ -15,6 +15,7 @@ export async function DELETE(req: Request) {
     const {data:entry,error} = await s.from("tournament_registrations").select("*").eq("id",id).single();
     if (error || !entry) return NextResponse.json({error:"Registration not found."},{status:404});
     if (!["pending_payment","unpaid","failed","expired"].includes(entry.payment_status)) return NextResponse.json({error:"Paid or refunded registrations must be retained for payment records. Contact the club administrator to cancel the entry."},{status:409});
+    if(entry.payment_method==='bank_transfer')return NextResponse.json({error:'Bank-transfer references and instruction snapshots must be retained. Ask the club administrator to cancel the entry without deleting its history.'},{status:409});
     if (entry.stripe_checkout_session_id) {
       const stripe = getStripe();
       const session = await stripe.checkout.sessions.retrieve(entry.stripe_checkout_session_id);

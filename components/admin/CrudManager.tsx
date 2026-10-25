@@ -137,8 +137,8 @@ export default function CrudManager({ table, title, fields, rows, meetingLabels,
       if (f.type === "prizes") payload[f.name] = normalisePrizeRows(payload[f.name]).filter((p) => p.position.trim() || p.prize.trim()).map((p) => ({ position: p.position, category: p.category, prize: p.prize, amount_cents: p.amount_cents ? dollarsToCents(p.amount_cents) : null }));
       if (f.type === "multi_options") payload[f.name] = Array.isArray(payload[f.name]) ? payload[f.name] : [];
     }
-    const res = await fetch("/api/admin/crud", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ table, action: editing ? "update" : "create", id: editing, payload }) });
-    const json = await res.json(); setLoading(false); if (!res.ok) return alert(json.error || "Save failed"); window.location.reload();
+    try { const res = await fetch("/api/admin/crud", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ table, action: editing ? "update" : "create", id: editing, payload }) });
+    const json = await res.json(); if (!res.ok) throw new Error(json.error || "Save failed"); window.location.reload(); } catch(error){alert(error instanceof Error?error.message:"Save failed. Please retry.");} finally {setLoading(false);}
   }
   async function del(id: string) {
     if (!confirm("Delete this record?")) return;

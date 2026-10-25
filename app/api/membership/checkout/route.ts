@@ -1,3 +1,6 @@
+import {bankRegistration} from "@/lib/bankRegistration";
+import {registrationPolicy,recordPolicy,MEMBERSHIP_REGISTRATION_POLICY} from "@/lib/registrationPolicies";
+import {tournamentIdentity} from "@/lib/tournamentIdentity";
 import { validDateOfBirth } from "@/lib/registrationValidation";
 import { notifyRegistrationReceived } from "@/lib/registrationNotification";
 import { NextResponse } from "next/server";
@@ -16,6 +19,7 @@ export async function POST(req: Request) {
     }
     body.email = body.email.toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email) || !body.terms_accepted) return NextResponse.json({ error: "Enter a valid email and accept the membership terms." }, { status: 400 });
+    let policy;try{policy=registrationPolicy(body,{registration_policy:MEMBERSHIP_REGISTRATION_POLICY});}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Invalid consent"},{status:400});}
     const s = createSupabaseServiceClient();
 
     const { data: dbOptions, error: optErr } = await s
@@ -55,17 +59,15 @@ export async function POST(req: Request) {
 
     const total = items.reduce((sum: number, item: any) => sum + item.total_cents, 0);
 
-    if (total <= 0) {
+    if (!Number.isSafeInteger(total) || total <= 0) {
       return NextResponse.json(
         { error: "Membership payment amount must be greater than $0. Please check membership fees in Admin → Membership Options." },
         { status: 400 }
       );
     }
 
-    assertPaymentReady();
-    const { data: record, error } = await s
-      .from("club_memberships")
-      .insert({
+    const identity=tournamentIdentity('membership',body);
+    const payload={
         first_name: body.first_name,
         last_name: body.last_name,
         email: body.email,
@@ -88,13 +90,16 @@ export async function POST(req: Request) {
         membership_options: items,
         total_amount_cents: total,
         payment_status: "pending_payment",
-      })
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
+      };
+    const {data:existing,error:existingError}=await s.from('club_memberships').select('*').eq('id',identity).maybeSingle();if(existingError)throw existingError;
+    if(existing){if(body.payment_method==='bank_transfer'&&existing.payment_method==='bank_transfer'&&existing.payment_status==='pending_payment'){return NextResponse.json(await bankRegistration(s,'membership',identity,payload,policy));}return NextResponse.json({error:'An entry already exists. Find your membership or contact the club; do not pay twice.'},{status:409});}
+    const {data:matches,error:matchError}=await s.from('club_memberships').select('id').ilike('email',body.email.replace(/[\\%_]/g,'\\$&')).ilike('first_name',body.first_name.replace(/[\\%_]/g,'\\$&')).ilike('last_name',body.last_name.replace(/[\\%_]/g,'\\$&')).eq('date_of_birth',body.date_of_birth).limit(1);if(matchError)throw matchError;if(matches?.length)return NextResponse.json({error:'A membership record already exists. Use Find Your Membership / Renew.'},{status:409});
+    if(body.payment_method==='bank_transfer')return NextResponse.json(await bankRegistration(s,'membership',identity,payload,policy));
+    if(body.payment_method&&body.payment_method!=='stripe')throw new Error('Invalid payment method.');
+    assertPaymentReady();
+    const {data:record,error}=await s.from('club_memberships').insert({...payload,id:identity}).select().single();
+    if(error)throw error;
+    await recordPolicy(s,record.id,'membership',policy);
 
     savedMembershipId = record.id;
     const stripe = getStripe();
@@ -113,7 +118,7 @@ export async function POST(req: Request) {
       success_url: `${site}/payment/success?type=membership&membership_id=${record.id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${site}/payment/cancel?type=membership&membership_id=${record.id}`,
       metadata: { type: "membership", membership_id: record.id },
-    });
+    },{idempotencyKey:`hpcc-membership-${record.id}`});
 
     const { error: sessionError } = await s.from("club_memberships").update({ stripe_checkout_session_id: session.id, updated_at: new Date().toISOString() }).eq("id", record.id);
     if (sessionError || !session.url) { try { await stripe.checkout.sessions.expire(session.id); } catch {} throw new Error("Checkout link could not be saved"); }

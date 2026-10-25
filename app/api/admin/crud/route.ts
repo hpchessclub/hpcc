@@ -1,3 +1,4 @@
+import {mutateAccount} from "@/lib/bankAccounts";
 import { POPPIES_CONFIG_SLUG } from "@/lib/poppiesConfig";
 import { INTERSCHOOL_CONFIG_SLUG } from "@/lib/interschoolConfig";
 import { JUNIOR_CONFIG_SLUG } from "@/lib/juniorConfig";
@@ -66,11 +67,8 @@ export async function POST(req: Request){
   }
 
 
-  if (table === "payment_accounts" && ['create','update'].includes(action)) {
-    for (const key of Object.keys(clean)) if (!["name", "code", "account_number", "purpose", "is_active", "updated_at"].includes(key)) delete clean[key];
-    for (const key of ["name", "code", "account_number", "purpose"]) clean[key] = String(clean[key] || "").trim();
-    if (!clean.name || !clean.code || !clean.account_number || !clean.purpose || Object.values(clean).some(v => typeof v === "string" && v.length > 500)) return NextResponse.json({error:"Account name, code, number and purpose are required (maximum 500 characters each)."}, {status:400});
-  }
+  if(table==='payment_accounts'){try{const result=await mutateAccount(s,action,id,payload||{});revalidatePath('/club-admin/accounts');return NextResponse.json(result);}catch(e){return NextResponse.json({error:e instanceof Error?e.message:'Unable to save account.'},{status:400});}}
+  if(table==='tournaments'&&Object.prototype.hasOwnProperty.call(clean,'registration_policy')){const {error:policyColumnError}=await s.from('tournaments').select('registration_policy').limit(0);if(policyColumnError){if(String(clean.registration_policy||'').trim())return NextResponse.json({error:'Apply HPCC v4_8 SQL before configuring registration policies.'},{status:400});delete clean.registration_policy;}}
   if (table === "tournaments" && clean.payment_account_id && ['create','update'].includes(action)) {
     const {data: account} = await s.from("payment_accounts").select("id,is_active").eq("id", clean.payment_account_id).maybeSingle();
     if (!account) return NextResponse.json({error:"Select an existing payment account."}, {status:400});
