@@ -1,0 +1,8 @@
+"use client";
+import {ProgrammeSection} from "@/lib/programmeYears";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+export default function ProgrammeSectionsEditor({sections,onChange}:{sections:ProgrammeSection[];onChange:(sections:ProgrammeSection[])=>void}){
+ function edit(index:number,patch:Partial<ProgrammeSection>){onChange(sections.map((s,i)=>i===index?{...s,...patch}:s));}
+ function move(index:number,offset:number){const next=[...sections];[next[index],next[index+offset]]=[next[index+offset],next[index]];onChange(next);}
+ return <div className="space-y-6">{sections.map((s,i)=><section key={i} className="rounded-xl border p-4"><label className="block font-semibold">Section heading<input required maxLength={200} value={s.title} onChange={e=>edit(i,{title:e.target.value})} className="admin-input mt-1 w-full"/></label><div className="my-3 flex gap-2"><button type="button" className="btn-secondary" disabled={i===0} onClick={()=>move(i,-1)} aria-label={`Move ${s.title} up`}>Move up</button><button type="button" className="btn-secondary" disabled={i===sections.length-1} onClick={()=>move(i,1)} aria-label={`Move ${s.title} down`}>Move down</button><button type="button" className="btn-secondary" onClick={()=>{if(window.confirm(`Remove “${s.title}” from this year? Save is required to apply this change.`))onChange(sections.filter((_,n)=>n!==i));}}>Remove section</button></div><RichTextEditor manageImages label={s.title||"Section content"} value={s.content} onChange={content=>edit(i,{content})}/></section>)}<button type="button" disabled={sections.length>=60} className="btn-secondary" onClick={()=>onChange([...sections,{title:"New section",content:""}])}>Add additional section</button></div>;
+}
