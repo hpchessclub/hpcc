@@ -72,7 +72,6 @@ export default async function HomePage() {
         </div>
       </section>
       <nav aria-label="Results and gallery" className="mt-10 flex flex-wrap gap-4"><Link className="btn-secondary" href="/results">Tournament results ↗</Link><Link className="btn-secondary" href="/photo-gallery">Photo gallery ↗</Link></nav>
-      <section className="mt-12 flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-hpcc-accent p-8 text-hpcc-navy md:p-12"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-hpcc-blue">Make your next move</p><h2 className="mt-3 text-3xl font-extrabold">Chess brings us together.</h2><p className="mt-3 text-hpcc-navy/75">Find your member record, renew or become part of HPCC.</p></div><Link href="/join#membership-search" className="rounded-full bg-hpcc-navy px-6 py-3 font-bold text-white">Join our community ↗</Link></section>
       <section className="mt-10 grid gap-6 lg:grid-cols-2">
         <div className="card p-6">
           <h2 className="text-2xl font-extrabold">Find Us</h2>
