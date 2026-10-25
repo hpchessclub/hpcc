@@ -134,6 +134,6 @@ export async function POST(req: Request) {
       payment_status: "pending_payment",
     });
   } catch (e: any) {
-    return NextResponse.json({ error: `Membership could not be completed.${savedMembershipId ? ` Reference: ${savedMembershipId}.` : ""} If payment was taken, do not pay again. Contact hpchess.winnie@gmail.com.`, membership_id: savedMembershipId || undefined }, { status: 503 });
+    return NextResponse.json({ error: `Membership could not be completed.${savedMembershipId ? ` Reference: ${savedMembershipId}.` : ""} If payment was taken, do not pay again. Contact howickpakurangachessclub@gmail.com.`, membership_id: savedMembershipId || undefined }, { status: 503 });
   }
 }

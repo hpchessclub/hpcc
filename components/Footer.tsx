@@ -80,7 +80,7 @@ export default async function Footer() {
           <h3 className="font-bold text-hpcc-navy">Contact Us</h3>
           <div className="mt-3 space-y-2 text-sm text-hpcc-navy/80">
             <p>{settings?.club_address || "Howick Bowling Club, 33 Selwyn Road, Cockle Bay, Auckland 2014, New Zealand"}</p>
-            <p>{settings?.general_email || "hpchess.winnie@gmail.com"}</p>
+            <p>{settings?.general_email || "howickpakurangachessclub@gmail.com"}</p>
             {(settings?.senior_club_captain_name || settings?.club_captain_name) && <p>Senior Club Captain: {settings?.senior_club_captain_name || settings?.club_captain_name}</p>}
             {settings?.junior_club_captain_name && <p>Junior Club Captain: {settings.junior_club_captain_name}</p>}
           </div>

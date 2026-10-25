@@ -9,7 +9,7 @@ export default function PaymentVerification({ sessionId, reference }: { sessionI
       const res = await fetch("/api/payments/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: sessionId }) });
       const data = await res.json();
       setResult(data);
-    } catch { setResult({ error: "We could not check your entry. If payment was taken, do not pay again. Contact hpchess.winnie@gmail.com." }); }
+    } catch { setResult({ error: "We could not check your entry. If payment was taken, do not pay again. Contact howickpakurangachessclub@gmail.com." }); }
     finally { setLoading(false); }
   }
   useEffect(() => { if (sessionId) void verify(); }, [sessionId]);
@@ -22,6 +22,6 @@ export default function PaymentVerification({ sessionId, reference }: { sessionI
     {result?.membership_id && <p className="mt-4 text-lg font-bold">Membership ID: {result.membership_id}</p>}
     {(result?.registration_id || reference) && <p className="mt-4 break-all text-sm"><b>Entry reference:</b> {result?.registration_id || reference}</p>}
     {sessionId && !confirmed && <button onClick={verify} disabled={loading} className="btn-secondary mt-5">{loading ? "Checking..." : "Check Again"}</button>}
-    <p className="mt-5 text-sm">For help, email <a href="mailto:hpchess.winnie@gmail.com" className="underline">hpchess.winnie@gmail.com</a> with your entry reference and payment receipt.</p>
+    <p className="mt-5 text-sm">For help, email <a href="mailto:howickpakurangachessclub@gmail.com" className="underline">howickpakurangachessclub@gmail.com</a> with your entry reference and payment receipt.</p>
   </div>;
 }

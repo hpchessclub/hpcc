@@ -22,7 +22,7 @@ export default function ClubNightsPage() {
       <p className="text-sm font-bold uppercase tracking-widest">New here?</p>
       <h1 className="mt-3 font-serif text-3xl font-bold sm:text-4xl">Your first club night</h1>
       <p className="mt-4 max-w-2xl">Complete beginners, returning players and visitors from other clubs are all welcome. Here’s everything you need for your first Tuesday.</p>
-      <a className="mt-6 inline-block rounded-lg bg-hpcc-navy px-5 py-3 font-bold text-white" href="mailto:hpchess.winnie@gmail.com">Email us before you visit</a>
+      <a className="mt-6 inline-block rounded-lg bg-hpcc-navy px-5 py-3 font-bold text-white" href="mailto:howickpakurangachessclub@gmail.com">Email us before you visit</a>
     </header>
     <section aria-labelledby="when"><h2 id="when" className="mb-4 font-serif text-2xl font-bold">When and where</h2>
       <dl className="grid gap-4 rounded-xl border border-hpcc-navy/15 bg-white p-6 sm:grid-cols-2">

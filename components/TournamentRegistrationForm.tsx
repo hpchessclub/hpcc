@@ -115,7 +115,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
       });
       const json = await res.json();
-      if (!res.ok) { setMessage(json.error || "Your registration is not confirmed. If payment was taken, do not pay again; contact hpchess.winnie@gmail.com."); return; }
+      if (!res.ok) { setMessage(json.error || "Your registration is not confirmed. If payment was taken, do not pay again; contact howickpakurangachessclub@gmail.com."); return; }
       if(json.tentative){setBank(json.bank_instructions);setConfirmed(true);setMessage(json.message);return;}
       if (json.url) {
         setPaymentUrl(json.url);
@@ -127,7 +127,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
       setConfirmed(true);
       setMessage(`${json.message || "Registration confirmed."}${json.registration_id ? ` Entry reference: ${json.registration_id}.` : ""}`);
     } catch {
-      setMessage("The connection was interrupted and we could not verify whether your entry was saved. Do not submit or pay again if payment was taken. Contact hpchess.winnie@gmail.com so we can check your entry.");
+      setMessage("The connection was interrupted and we could not verify whether your entry was saved. Do not submit or pay again if payment was taken. Contact howickpakurangachessclub@gmail.com so we can check your entry.");
     } finally { setLoading(false); }
 
   }
@@ -147,7 +147,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
           If you close or cancel the payment page, your entry will remain as <b>Pending Payment</b> and will not appear in the public entries list.
         </div>
       )}
-      {fee > 0 && !paymentAvailable && method==="stripe" && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-4 text-red-800">Online payment is temporarily unavailable. Contact hpchess.winnie@gmail.com to arrange registration.</p>}
+      {fee > 0 && !paymentAvailable && method==="stripe" && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-4 text-red-800">Online payment is temporarily unavailable. Contact howickpakurangachessclub@gmail.com to arrange registration.</p>}
       {paymentMode === "test" && <p className="mt-3 font-bold text-amber-800">Test checkout: this does not take a real payment or confirm a live paid entry.</p>}
       <p className="mt-3 text-sm text-slate-600">Current fee: <b>{fee > 0 ? formatMoney(fee) : isFreeClubEvent ? "Free for active members" : "Not configured — contact the club"}</b>.</p>
 

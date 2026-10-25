@@ -20,7 +20,7 @@ export default function SettingsManager({ initial,exists=!!initial,committee }: 
     id: "default",
     club_name: "Howick-Pakuranga Chess Club",
     club_address: "Howick Bowling Club, 33 Selwyn Road, Cockle Bay, Auckland 2014, New Zealand",
-    general_email: "hpchess.winnie@gmail.com",
+    general_email: "howickpakurangachessclub@gmail.com",
     status: "draft",
     is_published: false,
     membership_id_prefix: "HPCC",

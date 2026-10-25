@@ -13,7 +13,7 @@ function Icon({ label }: { label: string }) {
 
 export default function StayConnected({ settings }: { settings: any }) {
   const phone = settings?.senior_club_captain_phone || settings?.club_captain_phone || settings?.general_phone;
-  const email = settings?.general_email || "hpchess.winnie@gmail.com";
+  const email = settings?.general_email || "howickpakurangachessclub@gmail.com";
   const links = [
     ["Phone", phone ? `tel:${String(phone).replace(/\s+/g, "")}` : ""],
     ["Instagram", settings?.instagram_url],

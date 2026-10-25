@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack && node scripts/seed-hpcc-nzcf-news.mjs && node scripts/seed-hpcc-faq.mjs",
+    "build": "next build --webpack && node scripts/seed-hpcc-nzcf-news.mjs && node scripts/seed-hpcc-faq.mjs && node scripts/update-hpcc-contact-email.mjs",
     "start": "next start",
     "lint": "next lint"
   },
