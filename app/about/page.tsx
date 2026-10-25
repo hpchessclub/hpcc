@@ -1,3 +1,7 @@
+import {clubHistory} from "@/lib/clubHistory";
+import {createSupabaseServiceClient} from "@/lib/supabase/service";
+import {readClubPublicSettings,committeeDefaults} from "@/lib/clubPublicSettings";
+export const dynamic="force-dynamic";
 import PageShell from "@/components/PageShell";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -8,19 +12,19 @@ export const metadata: Metadata = {
 };
 
 // Public club information from https://www.hpchessclub.org/about-us-1.
-const officers = [
+const officerDefaults = [
   { role: "President", name: "FM Martin Dreyer", email: "martin@dandd.co.nz" },
   { role: "Secretary", name: "Winnie Ong", email: "hpchess.winnie@gmail.com" },
   { role: "Treasurer", name: "Mathew Gosling", email: "matthew.gosling99@gmail.com" },
   { role: "Club Captain", name: "Cigi Zhong", email: "zhongcigi@gmail.com" },
 ];
-const committee = [
-  "Tony Booth (Life Member)", "IO CM Paul Spiller MNZM", "Ludi Zhang",
-  "Bharat Somaraju", "Barry Hooton", "WCM Weiyang Yu", "FM Ewen Green (Life Member)",
-];
 const constitution = "https://www.hpchessclub.org/_files/ugd/138650_0582abb7b14d4ffab1af746819a0886c.pdf";
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const service=createSupabaseServiceClient();const {data}=await service.from("club_settings").select("*").eq("id","default").maybeSingle();
+  const settings=await readClubPublicSettings(service,data||{});const committee=settings.additional_committee_members||committeeDefaults;
+  const officers=officerDefaults.map(officer=>officer.role==="Secretary"?{...officer,name:settings.club_secretary_name,email:settings.club_secretary_email}:officer.role==="Club Captain"?{...officer,role:"Senior Club Captain",name:settings.senior_club_captain_name||"Contact the club",email:settings.senior_club_captain_email||""}:officer);
+
   return (
     <PageShell>
       <main className="container-page py-12">
@@ -34,14 +38,10 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+        <section className="mt-8 space-y-6">
           <article className="card p-7 lg:p-9">
             <h2 className="font-serif text-3xl">Our History</h2>
-            <div className="mt-5 space-y-4 leading-8 text-stone-700">
-              <p>FM Richard Sutton founded Cockle Bay Chess Club in the late 1960s. After meeting in his home and local halls, the club eventually settled downstairs at Howick Bowling Club.</p>
-              <p>The Howick and Pakuranga clubs merged in 1975, creating today’s Howick-Pakuranga Chess Club. Tony Booth later succeeded Sutton as president.</p>
-              <p>The club’s weekend tournament began in 1977. Its Latvian tournament name honours member and benefactor Janis Borovskis.</p>
-              <p>HPCC hosted national championships in 1990, 1999/2000, 2019 and 2025, alongside junior, interschool, senior and women’s events.</p>
+            <div className="mt-5 max-w-5xl space-y-4 leading-8 text-stone-700">{clubHistory.map((paragraph,index)=><p key={index}>{paragraph}</p>)}
             </div>
           </article>
           <article className="card p-7 lg:p-9">
@@ -58,7 +58,7 @@ export default function AboutPage() {
               <article key={officer.role} className="card p-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500">{officer.role}</h3>
                 <p className="mt-3 text-lg font-bold">{officer.name}</p>
-                <a href={`mailto:${officer.email}`} className="mt-3 block break-words text-sm underline underline-offset-4">{officer.email}</a>
+                {officer.email&&<a href={`mailto:${officer.email}`} className="mt-3 block break-words text-sm underline underline-offset-4">{officer.email}</a>}
               </article>
             ))}
           </div>

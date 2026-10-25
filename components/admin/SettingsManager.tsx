@@ -13,7 +13,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft"><h2 className="mb-4 text-xl font-extrabold text-hpcc-blue">{title}</h2><div className="grid gap-4 md:grid-cols-2">{children}</div></section>;
 }
 
-export default function SettingsManager({ initial }: { initial: Settings | null }) {
+export default function SettingsManager({ initial,exists=!!initial }: { initial: Settings | null;exists?:boolean }) {
   const [form, setForm] = useState<Settings>({
     id: "default",
     club_name: "Howick-Pakuranga Chess Club",
@@ -29,16 +29,20 @@ export default function SettingsManager({ initial }: { initial: Settings | null 
     club_from_name: "Howick-Pakuranga Chess Club",
     ...initial,
   });
+  const [hasRecord,setHasRecord]=useState(exists);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   function update(name: string, value: any) { setForm((f) => ({ ...f, [name]: value })); }
   async function save(publish = false) {
     setLoading(true); setMessage("");
     const payload = { ...form, id: "default", status: publish ? "published" : "draft", is_published: publish };
-    const res = await fetch("/api/admin/crud", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ table: "club_settings", action: initial ? "update" : "create", id: "default", payload }) });
-    const json = await res.json(); setLoading(false);
-    if (!res.ok) { setMessage(json.error || "Save failed"); return; }
-    setForm(json.data || payload); setMessage(publish ? "Settings published. Public pages will use these values." : "Draft saved.");
+    try{
+    const res = await fetch("/api/admin/crud", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ table: "club_settings", action: hasRecord ? "update" : "create", id: "default", payload }) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Save failed");
+    setForm(json.data || payload);setHasRecord(true); setMessage(publish ? "Settings published. The homepage contacts and About Us committee use these values immediately." : "Settings saved.");
+    }catch(error){setMessage(error instanceof Error?error.message:"Unable to save. Please try again.");}finally{setLoading(false);}
+
   }
   const input = (name: string, type = "text") => <input value={text(form[name])} onChange={(e) => update(name, e.target.value)} type={type} className="admin-input mt-1" />;
   const textarea = (name: string, rows = 3) => <textarea value={text(form[name])} onChange={(e) => update(name, e.target.value)} rows={rows} className="admin-input mt-1" />;
@@ -47,6 +51,8 @@ export default function SettingsManager({ initial }: { initial: Settings | null 
   return <div><div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-3xl font-extrabold">Club Settings</h1><p className="mt-1 text-sm text-slate-600">Status: <b className={form.is_published ? "text-green-700" : "text-amber-700"}>{form.is_published ? "Published" : "Draft"}</b></p></div><div className="flex gap-2"><button disabled={loading} onClick={() => save(false)} className="btn-secondary">Save Draft</button><button disabled={loading} onClick={() => save(true)} className="btn-primary">Publish Settings</button></div></div>{message && <div className="mb-5 rounded-lg bg-blue-50 p-3 text-sm font-bold text-hpcc-blue">{message}</div>}<MembershipNumbering initial={initial} /><div className="space-y-6">
     <Section title="Club Basic Details"><Field label="Club name">{input("club_name")}</Field><Field label="General contact email">{input("general_email", "email")}</Field></Section>
     <Section title="Club Address & Map"><div className="md:col-span-2"><Field label="Club address used for map">{textarea("club_address", 2)}</Field><div className="mt-3"><AddressAutocomplete onSelect={(v) => update("club_address", v.display)} /></div><p className="mt-2 text-xs text-slate-500">When published, the home/contact map will update automatically from this address.</p></div></Section>
+    <Section title="Club Secretary Details"><Field label="Secretary name">{input("club_secretary_name")}</Field><Field label="Secretary email">{input("club_secretary_email","email")}</Field><Field label="Secretary phone">{input("club_secretary_phone","tel")}</Field><p className="text-sm text-stone-600">These details appear on the homepage. Update whenever the role changes, then Publish Settings.</p></Section>
+    <Section title="Additional Committee Members"><div className="md:col-span-2"><Field label="Names (one per line)"><textarea rows={8} value={(form.additional_committee_members||[]).join("\n")} onChange={e=>update("additional_committee_members",e.target.value.split("\n"))} className="admin-input mt-1"/></Field><p className="mt-2 text-sm">Published on About Us. Add, remove or reorder names here.</p></div></Section>
     <Section title="Senior Club Captain Details"><Field label="Senior Club Captain Name">{input("senior_club_captain_name")}</Field><Field label="Senior Club Captain Phone">{input("senior_club_captain_phone")}</Field><Field label="Senior Club Captain Email">{input("senior_club_captain_email", "email")}</Field></Section>
     <Section title="Junior Club Captain Details"><Field label="Junior Club Captain Name">{input("junior_club_captain_name")}</Field><Field label="Junior Club Captain Phone">{input("junior_club_captain_phone")}</Field><Field label="Junior Club Captain Email">{input("junior_club_captain_email", "email")}</Field></Section>
     <Section title="Schedules"><div className="md:col-span-2"><Field label="Main Club Schedule">{textarea("main_club_schedule", 4)}</Field></div><div className="md:col-span-2"><Field label="Junior Club Schedule">{textarea("junior_club_schedule", 4)}</Field></div></Section>

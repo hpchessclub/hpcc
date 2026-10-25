@@ -1,3 +1,5 @@
+import ClubContacts from "@/components/ClubContacts";
+import {readClubPublicSettings} from "@/lib/clubPublicSettings";
 import NzcfMembershipNote from "@/components/NzcfMembershipNote";
 // Tournament data is managed in admin and must be read on every request.
 export const dynamic = "force-dynamic";
@@ -29,6 +31,7 @@ export default async function HomePage() {
     service.from("club_settings").select("*").eq("id", "default").maybeSingle()
   ]);
   const news = mergeHpccNews(storedNews || []).slice(0, 3);
+  const publicSettings=await readClubPublicSettings(service,settings||{});
   const mapAddress = settings?.club_address || "East Auckland, New Zealand";
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapAddress)}&output=embed`;
 
@@ -72,6 +75,7 @@ export default async function HomePage() {
         </div>
       </section>
       <nav aria-label="Results and gallery" className="mt-10 flex flex-wrap gap-4"><Link className="btn-secondary" href="/results">Tournament results ↗</Link><Link className="btn-secondary" href="/photo-gallery">Photo gallery ↗</Link></nav>
+      <ClubContacts settings={publicSettings}/>
       <section className="mt-10 grid gap-6 lg:grid-cols-2">
         <div className="card p-6">
           <h2 className="text-2xl font-extrabold">Find Us</h2>

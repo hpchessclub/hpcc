@@ -1,3 +1,4 @@
+import {SECRETARY_FIELDS,validateClubPublicSettings,saveClubPublicSettings} from "@/lib/clubPublicSettings";
 import {mutateAccount} from "@/lib/bankAccounts";
 import { POPPIES_CONFIG_SLUG } from "@/lib/poppiesConfig";
 import { INTERSCHOOL_CONFIG_SLUG } from "@/lib/interschoolConfig";
@@ -57,12 +58,18 @@ export async function POST(req: Request){
   if(!canAccessTable(admin.profile.role, table)) return NextResponse.json({error:'Permission denied'},{status:403});
   const s=createSupabaseServiceClient();
   const clean:any={...payload, updated_at:new Date().toISOString()};
+  let clubPublic:any=null;
+  if(table==='club_settings'&&[...SECRETARY_FIELDS,'additional_committee_members'].some(key=>Object.prototype.hasOwnProperty.call(payload||{},key))){
+   try{clubPublic=validateClubPublicSettings(payload);}catch(e){return NextResponse.json({error:e instanceof Error?e.message:'Invalid public contacts.'},{status:400});}
+   for(const key of [...SECRETARY_FIELDS,'additional_committee_members'])delete clean[key];
+  }
+
   if (table === "news_posts") {
-    if ([JUNIOR_CONFIG_SLUG, INTERSCHOOL_CONFIG_SLUG, POPPIES_CONFIG_SLUG, "hpcc-internal-season-results"].includes(payload?.slug)) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
+    if (String(payload?.slug||"").startsWith("hpcc-internal-")) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
     if (id) {
       const {data: existing, error} = await s.from("news_posts").select("slug").eq("id", id).maybeSingle();
       if (error) return NextResponse.json({error:error.message},{status:400});
-      if ([JUNIOR_CONFIG_SLUG, INTERSCHOOL_CONFIG_SLUG, POPPIES_CONFIG_SLUG, "hpcc-internal-season-results"].includes(existing?.slug)) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
+      if (String(existing?.slug||"").startsWith("hpcc-internal-")) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
     }
   }
 
@@ -87,7 +94,7 @@ export async function POST(req: Request){
     if(booleanFields.has(k)) clean[k]=!!clean[k];
   });
   if(table==='news_posts' && clean.title && !clean.slug) clean.slug=slugify(clean.title);
-  if (table === "news_posts" && [JUNIOR_CONFIG_SLUG, INTERSCHOOL_CONFIG_SLUG, POPPIES_CONFIG_SLUG, "hpcc-internal-season-results"].includes(clean.slug)) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
+  if (table === "news_posts" && String(clean.slug||"").startsWith("hpcc-internal-")) return NextResponse.json({error:"Use the programme settings to edit this configuration."},{status:403});
   if(table==='news_posts' && clean.is_published && !clean.published_at) clean.published_at=new Date().toISOString();
   if(table==='tournaments' && (Object.prototype.hasOwnProperty.call(clean, 'rounds_display') || Object.prototype.hasOwnProperty.call(clean, 'rounds'))) clean.rounds = tournamentRounds(clean);
   if(table==='tournaments' && clean.title && !clean.slug) clean.slug=slugify(clean.title);
@@ -113,18 +120,26 @@ export async function POST(req: Request){
     if(!['payment_accounts','membership_options','agm_decisions','elected_team_members'].includes(table)) clean.created_by=admin.user.id;
     const {data,error}=await s.from(table).insert(clean).select().single();
     if(error) return NextResponse.json({error:error.message},{status:400});
+    if(table==='club_settings'){
+     if(clubPublic){try{await saveClubPublicSettings(s,clubPublic);}catch(e){return NextResponse.json({error:'Club settings saved, but the contact/committee update failed. Reload settings and review before retrying.'},{status:503});}}
+     revalidatePath('/');revalidatePath('/about');revalidatePath('/contact');revalidatePath('/club-admin/settings');
+    }
     await maybeCreateSocialDraft(s, table, data, clean, admin.user.id);
     await maybeCreateNewsFromSocial(s, table, data, clean, admin.user.id);
     if(table==="membership_options"){revalidatePath("/join");revalidatePath("/club-admin/membership-options");}
-    return NextResponse.json({data});
+    return NextResponse.json({data:table==='club_settings'&&clubPublic?{...data,...clubPublic}:data});
   }
   if(action==='update'){
     const {data,error}=await s.from(table).update(clean).eq('id',id).select().single();
     if(error) return NextResponse.json({error:error.message},{status:400});
+    if(table==='club_settings'){
+     if(clubPublic){try{await saveClubPublicSettings(s,clubPublic);}catch(e){return NextResponse.json({error:'Club settings saved, but the contact/committee update failed. Reload settings and review before retrying.'},{status:503});}}
+     revalidatePath('/');revalidatePath('/about');revalidatePath('/contact');revalidatePath('/club-admin/settings');
+    }
     await maybeCreateSocialDraft(s, table, data, clean, admin.user.id);
     await maybeCreateNewsFromSocial(s, table, data, clean, admin.user.id);
     if(table==="membership_options"){revalidatePath("/join");revalidatePath("/club-admin/membership-options");}
-    return NextResponse.json({data});
+    return NextResponse.json({data:table==='club_settings'&&clubPublic?{...data,...clubPublic}:data});
   }
   if(action==='delete'){
     if (typeof id !== 'string' || !id.trim()) return NextResponse.json({error:'Select a record to delete.'},{status:400});
