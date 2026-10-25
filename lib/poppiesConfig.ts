@@ -1,6 +1,6 @@
-import {ProgrammeSection,validateSections} from "@/lib/programmeYears";
+import {ProgrammeSection,validateSections,validateDisplayOrder} from "@/lib/programmeYears";
 export const POPPIES_CONFIG_SLUG = "hpcc-internal-poppies-settings";
-export type PoppiesEvent = {year:number;title:string;date:string;time:string;venue:string;content:string;results:string;resultsUrl:string;sections?:ProgrammeSection[]};
+export type PoppiesEvent = {year:number;displayOrder?:number;title:string;date:string;time:string;venue:string;content:string;results:string;resultsUrl:string;sections?:ProgrammeSection[]};
 export type PoppiesConfig = {title:string;introduction:string;cardText:string;events:PoppiesEvent[]};
 export const poppiesDefaults: PoppiesConfig = {
  title:"Poppies Chess Challenge",
@@ -40,6 +40,7 @@ export function validatePoppiesConfig(input: unknown): PoppiesConfig {
   if(!event.title)throw new Error("Event title is required.");
   if(event.date && (!/^\d{4}-\d{2}-\d{2}$/.test(event.date) || Number.isNaN(Date.parse(event.date)) || new Date(event.date).toISOString().slice(0,10)!==event.date || Number(event.date.slice(0,4))!==event.year))throw new Error("Enter an actual date within the event year, or leave it blank.");
   if(event.resultsUrl){const u=new URL(event.resultsUrl);if(!["http:","https:"].includes(u.protocol) || u.username || u.password)throw new Error("Use an HTTP or HTTPS results link.");}
+  if(row.displayOrder!==undefined)event.displayOrder=validateDisplayOrder(row.displayOrder);
   event.sections=validateSections(row.sections);
   return event;
  });return out;
