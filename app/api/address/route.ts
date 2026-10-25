@@ -68,7 +68,7 @@ async function searchAddy(query: string) {
 
 async function searchNominatim(query: string) {
   const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=nz&limit=8&q=${encodeURIComponent(query)}`;
-  const res = await fetch(url, { headers: { "Accept-Language": "en-NZ", "User-Agent": "AucklandKnightsChessClub/1.0" }, next: { revalidate: 60 } });
+  const res = await fetch(url, { headers: { "Accept-Language": "en-NZ", "User-Agent": "HowickPakurangaChessClub/1.0" }, next: { revalidate: 60 } });
   if (!res.ok) throw new Error(`Nominatim lookup failed: ${res.status}`);
   const json = await res.json();
   return (Array.isArray(json) ? json : []).map(normaliseGeneric).filter((x: NormalisedAddress) => x.display).slice(0, 8);

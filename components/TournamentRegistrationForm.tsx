@@ -157,7 +157,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
           <label>
             <span className="label">Membership ID or registered email *</span>
             <div className="mt-1 flex flex-col gap-2 sm:flex-row">
-              <input value={memberIdentifier} onChange={(e) => { setMemberIdentifier(e.target.value); setMember(null); }} placeholder="AK01001 or member@email.com" className="input uppercase sm:flex-1" />
+              <input value={memberIdentifier} onChange={(e) => { setMemberIdentifier(e.target.value); setMember(null); }} placeholder="HPCC01001 or member@email.com" className="input uppercase sm:flex-1" />
               <button type="button" onClick={findMember} disabled={lookupLoading} className="btn-secondary whitespace-nowrap">
                 {lookupLoading ? "Finding..." : "Find Member"}
               </button>

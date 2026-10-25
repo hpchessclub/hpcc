@@ -7,7 +7,7 @@ from reportlab.lib.pagesizes import A4
 root=Path(__file__).resolve().parents[1]
 styles=getSampleStyleSheet();styles.add(ParagraphStyle(name='ClubTitle',fontName='Helvetica-Bold',fontSize=24,leading=29,spaceAfter=16,textColor=colors.HexColor('#234c35')));styles.add(ParagraphStyle(name='ClubHeading',fontName='Helvetica-Bold',fontSize=13,leading=18,spaceBefore=13,spaceAfter=7,keepWithNext=True,textColor=colors.HexColor('#234c35')));styles.add(ParagraphStyle(name='ClubBody',fontName='Helvetica',fontSize=10,leading=15,spaceAfter=9));styles.add(ParagraphStyle(name='ClubNote',fontName='Helvetica',fontSize=8,leading=12,spaceAfter=12,textColor=colors.HexColor('#536356')))
 def footer(c,d):
- c.setStrokeColor(colors.HexColor('#b9d4b6'));c.line(42,43,A4[0]-42,43);c.setFillColor(colors.HexColor('#536356'));c.setFont('Helvetica',8);c.drawString(42,29,'HPCC | Revision 2026.10.25.2 | 25 October 2026');c.drawRightString(A4[0]-42,29,str(d.page))
+ c.setStrokeColor(colors.HexColor('#b9d4b6'));c.line(42,43,A4[0]-42,43);c.setFillColor(colors.HexColor('#536356'));c.setFont('Helvetica',8);c.drawString(42,29,'HPCC | Revision 2026.10.26 | 26 October 2026');c.drawRightString(A4[0]-42,29,str(d.page))
 for slug in ['hpcc_deployment_guide','hpcc_admin_super_admin_user_guide']:
  text=(root/'docs'/f'{slug}.md').read_text();story=[];title=text.splitlines()[0].lstrip('# ')
  for block in text.split('\n\n'):

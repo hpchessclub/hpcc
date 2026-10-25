@@ -1,5 +1,5 @@
 # Admin & Super Admin User Guide
-Revision 2026.10.25.2 | 25 October 2026 | Howick-Pakuranga Chess Club
+Revision 2026.10.26 | 26 October 2026 | Howick-Pakuranga Chess Club
 
 ## Sign in, profile and passwords
 Use the HPCC admin portal at https://hpcc-flax.vercel.app/club-admin/login. Your menu depends on your role. Sessions expire after 10 minutes of inactivity; typing, clicking and scrolling maintain activity. Expiry returns to login. My Profile lets you edit your name and phone. Email and role are read-only there. A password change requires the current password and a new password of 12-128 characters, followed by a fresh login. Super Admin manages authorised accounts and roles. Missing Auth profiles are flagged rather than automatically given administrator access.

@@ -1,8 +1,8 @@
 # Deployment Guide
-Revision 2026.10.25.2 | 25 October 2026 | Howick-Pakuranga Chess Club
+Revision 2026.10.26 | 26 October 2026 | Howick-Pakuranga Chess Club
 
 ## Project boundary and release state
-Use GitHub hpchessclub/hpcc, Vercel team hpcc2 and HPCC's existing Supabase project. This is a separate project from Auckland Knights. Do not copy AKCC bank accounts, contacts, secrets or records. The existing preview/production address is https://hpcc-flax.vercel.app/. Review domain routing in the current HPCC Vercel project before changing the club's public domain. Code deployment does not apply SQL, choose bank defaults, verify email configuration or enable reminders.
+Use GitHub hpchessclub/hpcc, Vercel team hpcc2 and HPCC's existing Supabase project. Use only HPCC-owned bank accounts, contacts, credentials and records. The existing preview/production address is https://hpcc-flax.vercel.app/. Review domain routing in the current HPCC Vercel project before changing the club's public domain. Code deployment does not apply SQL, choose bank defaults, verify email configuration or enable reminders.
 
 ## Inspect and preserve the database
 Back up the HPCC database and inspect its current schema, constraints, triggers, RLS and grants before migration. No connected database credential was used to apply this release to production. The migrations were validated against isolated fixtures based on HPCC schema definitions; this is not confirmation of production migration status. Never execute hpcc_rebuild.sql as a routine upgrade: it resets application data. Preserve Auth users, profile IDs, membership IDs, receipts and Storage objects.
@@ -37,7 +37,7 @@ Verify migrations and RLS separately from deployment. Check defaults, a syntheti
 
 
 ## Membership, tournament and View Entries parity update
-Compared against AKCC source commit 0a95625fd1130a79174e216e137efc87d6c686ff. HPCC keeps its own content, styling, credentials, banking and records. Existing renewal/numbering, bank approvals, duplicate/refund protections, compact reports, consent and inactivity handling remain intact. New public player sorting, FIDE profiles/titles, independent ratings and styled XLSX export use allowlisted fields and enforce Show public entries and public event status in both page and export route. ExcelJS is pinned by package-lock. Profile lookups are cached and run in batches of six with short timeouts; unavailable titles stay blank. Public exports are no-store and noindex.
+HPCC keeps its own content, styling, credentials, banking and records. Existing renewal/numbering, bank approvals, duplicate/refund protections, compact reports, consent and inactivity handling remain intact. New public player sorting, FIDE profiles/titles, independent ratings and styled XLSX export use allowlisted fields and enforce Show public entries and public event status in both page and export route. ExcelJS is pinned by package-lock. Profile lookups are cached and run in batches of six with short timeouts; unavailable titles stay blank. Public exports are no-store and noindex.
 
 Inspect HPCC's actual schema and take a backup before running supabase/migration_v4_9_tournament_gender.sql. It only adds a nullable gender field and a check for future writes; it does not delete, renumber, overwrite or guess historical records. Existing gender values are not changed. Membership gender already exists in the checked-in schema. Runtime probes distinguish a missing tournament column from a database outage. An absent column does not break legacy public lists; newly supplied gender remains in the private policy snapshot until the dedicated field is available. Historical snapshot backfill is not automatically performed. The migration has not been applied by a code deployment.
 

@@ -1,6 +1,6 @@
 # Howick-Pakuranga Chess Club
 
-Independent Next.js / TypeScript / Tailwind / Supabase application based on AKCC commit 30cd5fd55fea54f65622fe71ba44a23abef7f7fc (10 October 2026). No AKCC credentials or records are included.
+Independent Howick-Pakuranga Chess Club application using Next.js, TypeScript, Tailwind CSS and Supabase. HPCC uses its own configuration, credentials and records.
 
 ## 25 October 2026 upgrade
 
