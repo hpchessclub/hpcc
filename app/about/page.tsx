@@ -1,6 +1,8 @@
+import {readCommittee} from "@/lib/committeeStorage";
+import {COMMITTEE_ROLES} from "@/lib/committeeYears";
 import {clubHistory} from "@/lib/clubHistory";
 import {createSupabaseServiceClient} from "@/lib/supabase/service";
-import {readClubPublicSettings,committeeDefaults} from "@/lib/clubPublicSettings";
+import {readClubPublicSettings} from "@/lib/clubPublicSettings";
 export const dynamic="force-dynamic";
 import PageShell from "@/components/PageShell";
 import Link from "next/link";
@@ -11,19 +13,12 @@ export const metadata: Metadata = {
   description: "Discover HPCC’s history, junior chess tradition and club committee.",
 };
 
-// Public club information from https://www.hpchessclub.org/about-us-1.
-const officerDefaults = [
-  { role: "President", name: "FM Martin Dreyer", email: "martin@dandd.co.nz" },
-  { role: "Secretary", name: "Winnie Ong", email: "hpchess.winnie@gmail.com" },
-  { role: "Treasurer", name: "Mathew Gosling", email: "matthew.gosling99@gmail.com" },
-  { role: "Club Captain", name: "Cigi Zhong", email: "zhongcigi@gmail.com" },
-];
 const constitution = "https://www.hpchessclub.org/_files/ugd/138650_0582abb7b14d4ffab1af746819a0886c.pdf";
 
-export default async function AboutPage() {
+export default async function AboutPage({searchParams}:{searchParams:Promise<{year?:string}>}) {
   const service=createSupabaseServiceClient();const {data}=await service.from("club_settings").select("*").eq("id","default").maybeSingle();
-  const settings=await readClubPublicSettings(service,data||{});const committee=settings.additional_committee_members||committeeDefaults;
-  const officers=officerDefaults.map(officer=>officer.role==="Secretary"?{...officer,name:settings.club_secretary_name,email:settings.club_secretary_email}:officer.role==="Club Captain"?{...officer,role:"Senior Club Captain",name:settings.senior_club_captain_name||"Contact the club",email:settings.senior_club_captain_email||""}:officer);
+  const settings=await readClubPublicSettings(service,data||{});const {config}=await readCommittee(service,settings);const requested=Number((await searchParams).year);const record=config.years.find(row=>row.year===requested&&row.published)||config.years.find(row=>row.year===config.activeYear)!;
+  const committee=record.members;const officers=COMMITTEE_ROLES.map(role=>({role:role.label,...record.officers[role.key]}));
 
   return (
     <PageShell>
@@ -52,13 +47,13 @@ export default async function AboutPage() {
         </section>
 
         <section className="mt-10" aria-labelledby="committee-title">
-          <h2 id="committee-title" className="font-serif text-3xl">Our Committee</h2>
+          <h2 id="committee-title" className="font-serif text-3xl">Our Committee — {record.year}</h2><nav aria-label="Committee years" className="mt-4 flex flex-wrap gap-2">{config.years.filter(row=>row.published).sort((a,b)=>b.year-a.year).map(row=><Link key={row.year} href={`/about?year=${row.year}#committee-title`} aria-current={record.year===row.year?"page":undefined} className="btn-secondary py-2">{row.year}{row.year===config.activeYear?" · Current":""}</Link>)}</nav>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {officers.map(officer => (
               <article key={officer.role} className="card p-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500">{officer.role}</h3>
-                <p className="mt-3 text-lg font-bold">{officer.name}</p>
-                {officer.email&&<a href={`mailto:${officer.email}`} className="mt-3 block break-words text-sm underline underline-offset-4">{officer.email}</a>}
+                <p className="mt-3 text-lg font-bold">{officer.name||"Contact the club"}</p>
+                {officer.email&&<a href={`mailto:${officer.email}`} className="mt-3 block break-words text-sm underline underline-offset-4">{officer.email}</a>}{officer.phone&&<a href={`tel:${officer.phone.replace(/[^+\d]/g,'')}`} className="mt-2 block text-sm underline">{officer.phone}</a>}
               </article>
             ))}
           </div>

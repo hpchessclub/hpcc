@@ -1,3 +1,5 @@
+import {readCommittee} from "@/lib/committeeStorage";
+import {committeeContacts} from "@/lib/committeeYears";
 export const CLUB_PUBLIC_SETTINGS_SLUG='hpcc-internal-club-public-settings';
 export const SECRETARY_FIELDS=['club_secretary_name','club_secretary_email','club_secretary_phone'] as const;
 export const committeeDefaults=['Tony Booth (Life Member)','IO CM Paul Spiller MNZM','Ludi Zhang','Bharat Somaraju','Barry Hooton','WCM Weiyang Yu','FM Ewen Green (Life Member)','Vyshnavi Bandi'];
@@ -11,7 +13,9 @@ export function validateClubPublicSettings(input:any){
 export async function readClubPublicSettings(s:any,settings:any={}){
  const {data,error}=await s.from('news_posts').select('content').eq('slug',CLUB_PUBLIC_SETTINGS_SLUG).maybeSingle();if(error)throw Error('Club contact settings could not be loaded.');
  const configured=data?validateClubPublicSettings(JSON.parse(data.content)):{};
- return {...secretaryDefaults,...settings,additional_committee_members:committeeDefaults,...configured};
+ const legacy={...secretaryDefaults,...settings,additional_committee_members:committeeDefaults,...configured};
+ const {config}=await readCommittee(s,legacy);const active=config.years.find(row=>row.year===config.activeYear)!;
+ return {...legacy,...committeeContacts(active)};
 }
 export function clubContacts(settings:any){return [
  {role:'Club Secretary',name:settings?.club_secretary_name,email:settings?.club_secretary_email,phone:settings?.club_secretary_phone},
