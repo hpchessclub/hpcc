@@ -1,3 +1,4 @@
+import {validGender} from "@/lib/registrationGender";
 import {bankRegistration} from "@/lib/bankRegistration";
 import {registrationPolicy,recordPolicy,MEMBERSHIP_REGISTRATION_POLICY} from "@/lib/registrationPolicies";
 import {tournamentIdentity} from "@/lib/tournamentIdentity";
@@ -18,8 +19,10 @@ export async function POST(req: Request) {
       body[field] = body[field].trim();
     }
     body.email = body.email.toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email) || !body.terms_accepted) return NextResponse.json({ error: "Enter a valid email and accept the membership terms." }, { status: 400 });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email) || ![true,"true","on"].includes(body.terms_accepted)) return NextResponse.json({ error: "Enter a valid email and accept the membership terms." }, { status: 400 });
+    if(!validGender(body.gender))return NextResponse.json({error:"Please select a valid gender."},{status:400});
     let policy;try{policy=registrationPolicy(body,{registration_policy:MEMBERSHIP_REGISTRATION_POLICY});}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Invalid consent"},{status:400});}
+    if(body.payment_method&&!["stripe","bank_transfer"].includes(body.payment_method))return NextResponse.json({error:"Select Stripe or bank transfer."},{status:400});
     const s = createSupabaseServiceClient();
 
     const { data: dbOptions, error: optErr } = await s

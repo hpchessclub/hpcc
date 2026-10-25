@@ -129,7 +129,7 @@ test('non-admin cannot reconcile a payment', async () => {
 function registrationRoute(f, stripe) {
   return load('app/api/tournaments/[id]/register/route.ts', { '@/lib/supabase/service': { createSupabaseServiceClient: () => f.db }, '@/lib/stripe': { getStripe: () => stripe }, '@/lib/paymentConfig': config, '@/lib/tournamentPayment': f.payment, '@/lib/registrationNotification': {notifyRegistrationReceived:async()=> 'sent'} });
 }
-function registrationRequest(f, change = {}) { return new Request('https://example.invalid', { method: 'POST', body: JSON.stringify({ first_name: 'Test', last_name: 'Player', email: 'test@example.invalid', phone: 'fixture', date_of_birth: '2010-05-31', consent: 'on',photography:'no',policy_accepted:true,guardian_name:'Fixture Parent',guardian_consent:'on', ...change }) }); }
+function registrationRequest(f, change = {}) { return new Request('https://example.invalid', { method: 'POST', body: JSON.stringify({ first_name: 'Test', last_name: 'Player', email: 'test@example.invalid', phone: 'fixture', date_of_birth: '2010-05-31', gender:'Prefer not to say', consent: 'on',photography:'no',policy_accepted:true,guardian_name:'Fixture Parent',guardian_consent:'on', ...change }) }); }
 test('valid registration links checkout and embeds session ID in return URL', async () => {
   const f = fixture(); let args;
   const stripe = { checkout: { sessions: { create: async input => { args = input; return { id: 'cs_live_newfixture', url: 'https://checkout.stripe.com/fixture' }; } } } };

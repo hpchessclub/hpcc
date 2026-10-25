@@ -18,7 +18,7 @@ export default async function TournamentsPage() {
   const { data: tournaments } = await service
     .from("tournaments")
     .select("*")
-    .not("status", "in", "(completed,archived)")
+    .in("status", ["open", "closed"])
     .order("start_date", { ascending: true });
   const byYear = new Map<number, any[]>();
   for (const t of tournaments || []) {
@@ -51,7 +51,7 @@ export default async function TournamentsPage() {
               {t.description && <p className="mt-2 max-w-3xl whitespace-pre-line text-stone-700">{t.description}</p>}
               <div className="mt-3 flex flex-wrap gap-3 text-sm">
                 <Link href={`/tournaments/${t.slug}`} className="font-bold underline">Details</Link>
-                {t.status === 'open' && t.allow_public_registration && <Link href={`/tournaments/${t.slug}/register`} className="font-bold text-amber-700 underline">{t.tournament_type === "club_calendar" ? "Enrol with Membership" : "Register & Pay"}</Link>}
+                {t.status === 'open' && t.allow_public_registration && <Link href={`/tournaments/${t.slug}/register`} className="font-bold text-amber-700 underline">{t.tournament_type === "club_calendar" ? "Register for Club Event" : "Register for Tournament"}</Link>}
                 <Link href={`/absence?tournament=${encodeURIComponent(t.title)}`} aria-label={`Report absence for ${t.title}`} className="font-bold underline">Report absence</Link>
                 {t.show_public_entries && <Link href={`/tournaments/${t.slug}/entries`} className="font-bold underline">Entries</Link>}
               </div>

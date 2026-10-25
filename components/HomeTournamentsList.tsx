@@ -30,6 +30,8 @@ export default function HomeTournamentsList({ tournaments }: { tournaments: any[
               <p className="mt-2 text-sm text-stone-600">{t.venue_name || t.venue || "Venue TBC"}</p>
               <p className="mt-2 text-sm font-bold">{t.entry_fee_cents ? formatMoney(t.entry_fee_cents) : "Fee TBC"}</p>
               <Link href={`/tournaments/${t.slug}`} className="btn-primary mt-4 mr-2 py-2">View Details</Link>
+              {t.status==='open'&&t.allow_public_registration&&<Link href={`/tournaments/${t.slug}/register`} className="btn-primary mt-4 mr-2 py-2">Register</Link>}
+              {t.show_public_entries&&<Link href={`/tournaments/${t.slug}/entries`} className="btn-secondary mt-4 mr-2 py-2">View Entries</Link>}
               <Link href={`/absence?tournament=${encodeURIComponent(t.title)}`} aria-label={`Report absence for ${t.title}`} className="btn-secondary mt-4 py-2">Report absence</Link>
             </div>
           </article>

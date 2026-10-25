@@ -5,3 +5,10 @@ function mac(v:string){const key=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!key)t
 export function resumeToken(id:string,expires:number){const v=`${id}.${expires}`;return `${v}.${mac(v)}`;}
 export function readResumeToken(token:string){const [id,time,signature,...rest]=token.split('.');if(rest.length||! /^[a-f0-9-]{36}$/.test(id||'')||!/^\d{13}$/.test(time||'')||! /^[a-f0-9]{64}$/.test(signature||'')||Number(time)<=Date.now())return null;return timingSafeEqual(Buffer.from(signature),Buffer.from(mac(`${id}.${time}`)))?id:null;}
 export function playerIdentity(r:any){return JSON.stringify([r.tournament_id,...['first_name','last_name','email','date_of_birth'].map(k=>String(r[k]||'').trim().toLowerCase().replace(/\s+/g,' '))]);}
+export function reminderDue(entry:any,event:any,now=Date.now()){
+ const created=Date.parse(entry.created_at),last=Date.parse(entry.last_payment_reminder_at||'');
+ if(!Number.isFinite(created)||created>now-2*3600000)return false;
+ if(Number.isFinite(last)&&last>now-24*3600000)return false;
+ const final=reminderCutoff(event)>now&&reminderCutoff(event)<=now+24*3600000;
+ return final||(!Number.isFinite(last)?created<=now-24*3600000:last<=now-3*86400000);
+}

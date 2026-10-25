@@ -18,6 +18,7 @@ type MemberLookup = {
   email?: string;
   phone?: string;
   date_of_birth?: string;
+  gender?: string;
   nzcf_id?: string;
   nzcf_rating?: number;
   fide_id?: string;
@@ -39,6 +40,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
   const cats = categories(tournament);
   const isClubCalendar = tournament.tournament_type === "club_calendar";
   const [selectedCategory, setSelectedCategory] = useState(cats[0]?.key || cats[0]?.name || "default");
+  const [method,setMethod]=useState("stripe");
   const [paymentMode, setPaymentMode] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [paymentAvailable, setPaymentAvailable] = useState(true);
@@ -141,15 +143,15 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
         </div>
       ) : (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <b>Payment required:</b> your tournament entry is <b>not confirmed</b> until Stripe payment is verified or the club confirms receipt of your bank transfer.
+          <b>General/open event:</b> everyone is welcome, including non-members. The tournament fee is separate from club membership. Your entry is <b>not confirmed</b> until Stripe payment is verified or the club confirms receipt of your bank transfer.
           If you close or cancel the payment page, your entry will remain as <b>Pending Payment</b> and will not appear in the public entries list.
         </div>
       )}
-      {fee > 0 && !paymentAvailable && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-4 text-red-800">Online payment is temporarily unavailable. Contact hpchess.winnie@gmail.com to arrange registration.</p>}
+      {fee > 0 && !paymentAvailable && method==="stripe" && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-4 text-red-800">Online payment is temporarily unavailable. Contact hpchess.winnie@gmail.com to arrange registration.</p>}
       {paymentMode === "test" && <p className="mt-3 font-bold text-amber-800">Test checkout: this does not take a real payment or confirm a live paid entry.</p>}
       <p className="mt-3 text-sm text-slate-600">Current fee: <b>{fee > 0 ? formatMoney(fee) : isFreeClubEvent ? "Free for active members" : "Not configured — contact the club"}</b>.</p>
 
-      <p className="mt-4 text-sm"><a href="/join" className="font-bold underline">Join or renew Howick-Pakuranga membership</a></p>
+      {isClubCalendar&&<p className="mt-4 text-sm"><a href="/join" className="font-bold underline">Join or renew Howick-Pakuranga membership</a></p>}
       {isClubCalendar && (
         <div className="mt-5 rounded-xl bg-green-50 p-4">
           <label>
@@ -212,6 +214,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
           ["email", "Email *", member?.email || ""],
           ["phone", "Phone *", member?.phone || ""],
           ["date_of_birth", "Date of birth *", member?.date_of_birth ? String(member.date_of_birth).slice(0, 10) : ""],
+          ["gender", "Gender *", member?.gender || ""],
           ["nzcf_id", "NZCF ID", member?.nzcf_id || ""],
           ["nzcf_rating", "NZCF rating", member?.nzcf_rating || ""],
           ["fide_id", "FIDE ID", member?.fide_id || ""],
@@ -223,13 +226,14 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
         ].map(([name, label, defaultValue]) => (
           <label key={name}>
             <span className="label">{label}</span>
-            <input
+            {name === "gender" ? <select name="gender" defaultValue={String(defaultValue||"")} required className="input mt-1"><option value="">Select gender</option>{["Male","Female","Non-binary","Prefer not to say","Other"].map(g=><option key={g}>{g}</option>)}</select> : <input
               name={String(name)}
               defaultValue={String(defaultValue || "")}
-              type={name === "email" ? "email" : String(name).includes("date") ? "date" : "text"}
+              type={name === "email" ? "email" : String(name).includes("date") ? "date" : name==="phone"?"tel":"text"}
+              max={name==="date_of_birth"?new Intl.DateTimeFormat("en-CA",{timeZone:"Pacific/Auckland",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()):undefined}
               required={String(label).includes("*")}
               className="input mt-1"
-            />
+            />}
           </label>
         ))}
         <AddressAutocomplete onSelect={(v) => setAddress({ street_address: v.street_address, suburb: v.suburb, city: v.city, postcode: v.postcode })} />
@@ -248,7 +252,7 @@ export default function TournamentRegistrationForm({ tournament }: { tournament:
           Open payment page
         </a>
       )}
-      <RegistrationPolicies policy={tournament.registration_policy} free={isFreeClubEvent}/><BankInstructions instructions={bank}/><button disabled={loading || confirmed || (!isFreeClubEvent && fee <= 0) || false || (isClubCalendar && !member)} className="btn-primary mt-6">
+      <RegistrationPolicies policy={tournament.registration_policy} free={isFreeClubEvent} onPaymentMethodChange={setMethod}/><BankInstructions instructions={bank}/><button disabled={loading || confirmed || (!isFreeClubEvent&&method==="stripe"&&!paymentAvailable) || (!isFreeClubEvent && fee <= 0) || (isClubCalendar && !member)} className="btn-primary mt-6">
         {bank?"Tentative entry saved":confirmed ? "Registration Confirmed" : loading ? "Submitting..." : isFreeClubEvent ? "Register Free" : "Continue to Payment"}
       </button>
       {isClubCalendar && !member && <p className="mt-2 text-xs text-slate-500">Use Find Member first so the form can populate active membership details.</p>}

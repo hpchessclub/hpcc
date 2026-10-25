@@ -13,7 +13,7 @@ class FakeDB {
   }
   from(table) {
     const db = this;
-    let op = 'select', value, opts = {}, filters = [], singular = false, required = false, limit = Infinity;
+    let op = 'select', value, opts = {}, filters = [], singular = false, required = false, limit = Infinity, offset = 0;
     const q = {
       select(_cols, o) { if (o) opts = o; return q; },
       insert(v) { op = 'insert'; value = v; return q; },
@@ -26,6 +26,7 @@ class FakeDB {
       neq(k, v) { filters.push(r => r[k] !== v); return q; },
       in(k, v) { filters.push(r => v.includes(r[k])); return q; },
       order() { return q; }, limit(n) { limit = n; return q; },
+      range(start,end) { offset = start; limit = end-start+1; return q; },
       single() { singular = true; required = true; return q; },
       maybeSingle() { singular = true; return q; },
       then(resolve, reject) {
@@ -40,7 +41,7 @@ class FakeDB {
             if (!duplicate) rows.push(row);
             selected = [duplicate || row];
           } else {
-            selected = rows.filter(r => filters.every(f => f(r))).slice(0, limit);
+            selected = rows.filter(r => filters.every(f => f(r))).slice(offset, offset+limit);
             if (op === 'update') selected.forEach(r => Object.assign(r, structuredClone(value)));
           }
           return Promise.resolve({ data: opts.head ? null : singular ? structuredClone(selected[0] || null) : structuredClone(selected), count: selected.length, error: required && !selected.length ? { message: 'Row not found' } : null }).then(resolve, reject);

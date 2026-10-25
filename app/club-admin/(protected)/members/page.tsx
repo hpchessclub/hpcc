@@ -101,6 +101,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4"><h1 className="text-3xl font-normal">Howick-Pakuranga Membership Registration</h1><div className="flex gap-2"><a href="/join" className="btn-primary">Add New</a><a href={csvDownload} className="btn-secondary">Export</a><PdfPreview src={pdfPreview} label="View PDF" /></div></div>
       <p className="mt-2 text-stone-600">Find a player by name, membership ID or registered email. Search results also filter the member records and exports below.</p>
+      <p className="mt-2 text-sm text-amber-800">Bank transfers remain tentative until receipt is verified. Select Payment Method and Bank Reference in report columns; Admin and Super Admin can confirm received transfers using the payment action.</p>
       {isSuperAdmin && <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900">Super Admin mode: you can edit, deactivate or remove members below. Deactivate is safer than delete because payment history may be needed later.</p>}
 
       <form className="mt-5 space-y-5 bg-stone-100 p-6">

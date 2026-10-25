@@ -1,3 +1,5 @@
+import {reminderCutoff} from "@/lib/paymentReminder";
+import {validGender,genderColumnAvailable} from "@/lib/registrationGender";
 import {bankRegistration} from "@/lib/bankRegistration";
 import {registrationPolicy,recordPolicy} from "@/lib/registrationPolicies";
 import {tournamentIdentity} from "@/lib/tournamentIdentity";
@@ -35,13 +37,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
     body.email = body.email.toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return NextResponse.json({ error: "Enter a valid email address for confirmation." }, { status: 400 });
-    if (!body.consent) return NextResponse.json({ error: "Please confirm your registration details and communication consent." }, { status: 400 });
+    if (![true,"true","on"].includes(body.consent)) return NextResponse.json({ error: "Please confirm your registration details and communication consent." }, { status: 400 });
+    if(!validGender(body.gender))return NextResponse.json({error:"Please select a valid gender."},{status:400});
+    if(body.payment_method&&!["stripe","bank_transfer"].includes(body.payment_method))return NextResponse.json({error:"Select Stripe or bank transfer."},{status:400});
     const s = createSupabaseServiceClient();
 
     const { data: tournament, error: tournamentError } = await s.from("tournaments").select("*").eq("id", id).maybeSingle();
     if (tournamentError || !tournament) return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     if (tournament.status !== "open" || !tournament.allow_public_registration) return NextResponse.json({ error: "Registration is not open" }, { status: 400 });
 
+    if(tournament.registration_close_at&&reminderCutoff({registration_close_at:tournament.registration_close_at})<=Date.now())return NextResponse.json({error:"Registration for this tournament has closed."},{status:400});
     const { count, error: countError } = await s.from("tournament_registrations").select("id", { count: "exact", head: true }).eq("tournament_id", id).eq("payment_status", "paid").eq("registration_status", "confirmed");
     if (countError) throw countError;
     if (tournament.max_players && Number(count || 0) >= Number(tournament.max_players)) return NextResponse.json({ error: "Tournament has reached maximum players" }, { status: 400 });
@@ -112,6 +117,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       payment_status: requiresPayment ? "pending_payment" : "paid",
       registration_status: requiresPayment ? "pending_payment" : "confirmed",
     };
+    if(await genderColumnAvailable(s))(payload as any).gender=body.gender;
     if(body.payment_method==='bank_transfer'&&requiresPayment){
       const {data:prior,error:priorError}=await s.from('tournament_registrations').select('*').eq('id',registrationId).maybeSingle();if(priorError)throw priorError;
       if(duplicates?.length&&!prior)throw new Error('An existing entry needs review. Do not register or pay again.');

@@ -6,7 +6,7 @@ const clubEvents = [
 ];
 
 export default async function UpcomingClubTournaments() {
-  const { data: records } = await createSupabaseServiceClient().from("tournaments").select("slug,status,allow_public_registration,entry_fee_cents,require_payment,tournament_type").in("slug", clubEvents.map(event => event.slug));
+  const { data: records } = await createSupabaseServiceClient().from("tournaments").select("slug,status,allow_public_registration,entry_fee_cents,require_payment,tournament_type,show_public_entries").in("slug", clubEvents.map(event => event.slug));
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Pacific/Auckland", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const events = clubEvents.filter(event => event.end >= today);
   if (!events.length) return null;
@@ -18,6 +18,7 @@ export default async function UpcomingClubTournaments() {
         <h4 className="mt-2 text-lg font-bold">{event.title}</h4>
         <p className="mt-3 text-sm font-semibold">{event.date}</p>
         {records?.some(record => record.slug === event.slug && record.status === "open" && record.allow_public_registration) && <Link href={`/tournaments/${event.slug}/register`} className="btn-primary mt-4 mr-2 py-2">Register</Link>}
+        {records?.some(record=>record.slug===event.slug&&record.show_public_entries&&['open','closed','completed'].includes(record.status))&&<Link href={`/tournaments/${event.slug}/entries`} className="btn-secondary mt-4 mr-2 py-2">View Entries</Link>}
         <Link href={`/absence?tournament=${encodeURIComponent(event.title)}`} aria-label={`Report absence for ${event.title}`} className="btn-secondary mt-4 mr-2 py-2">Report absence</Link>
         {event.vega ? <a href={event.vega} target="_blank" rel="noopener noreferrer" className="btn-secondary mt-4 py-2">Vega players, pairings & results ↗</a> : <p className="mt-4 text-sm text-stone-600">The Vega link will appear once available.</p>}
       </article>)}

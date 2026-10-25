@@ -1,3 +1,4 @@
+import {genderColumnAvailable} from "@/lib/registrationGender";
 import { validateEntryChanges } from "@/lib/tournamentEntryEditing";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
@@ -45,6 +46,7 @@ export async function PATCH(req: Request) {
   if(typeof id!=="string"||!id.trim())return NextResponse.json({error:"Select a registration."},{status:400});
   let clean;try{clean=validateEntryChanges(payload);}catch(e:any){return NextResponse.json({error:e.message},{status:400});}
   const s=createSupabaseServiceClient();
+  if(!(await genderColumnAvailable(s))){if(clean.gender)return NextResponse.json({error:"Apply the additive HPCC v4_9 gender migration before editing gender. Other existing details can be saved with gender blank."},{status:409});delete clean.gender;}
   const {data,error}=await s.from("tournament_registrations").update({...clean,updated_at:new Date().toISOString()}).eq("id",id).select("id").single();
   if(error||!data)return NextResponse.json({error:"Unable to update this registration. Refresh the report and try again."},{status:400});
   revalidatePath("/club-admin/tournament-registrations");revalidatePath("/club-admin/tournament-registrations/players");revalidatePath("/tournaments","layout");

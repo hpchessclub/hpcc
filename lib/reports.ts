@@ -38,6 +38,7 @@ export const REPORT_COLUMNS: Record<ReportType, ReportColumn[]> = {
   ],
   tournament_registrations: [
     ...paymentTrackingColumns,
+    {key:"gender",label:"Gender",value:r=>r.gender||""},
     { key: "dob", label: "DOB", value: (r) => r.date_of_birth ? String(r.date_of_birth).slice(0, 10) : "" },
     { key: "tournament", label: "Tournament Name", value: (r) => r.tournament_title || r.tournaments?.title },
     { key: "category", label: "Category", value: (r) => r.category_name || "" },
