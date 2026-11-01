@@ -52,7 +52,7 @@ export const REPORT_COLUMNS: Record<ReportType, ReportColumn[]> = {
     { key: "fide_id", label: "FIDE ID", value: (r) => r.fide_id },
     { key: "fide_rating", label: "FIDE Rating", value: (r) => r.fide_rating },
     { key: "payment_status", label: "Payment", value: (r) => ["paid", "manual_paid", "waived"].includes(r.payment_status) ? "Paid" : "Unpaid" },
-    { key: "registration_status", label: "Status", value: (r) => r.payment_method==="bank_transfer"&&r.payment_status==="pending_payment"?"Tentative — bank transfer":memberStatusLabel(r.registration_status) },
+    { key: "registration_status", label: "Status", value: (r) => r.registration_status==="cancelled"?"Withdrawn / cancelled":r.payment_method==="bank_transfer"&&r.payment_status==="pending_payment"?"Tentative — bank transfer":memberStatusLabel(r.registration_status) },
     { key: "fee", label: "Fee", value: (r) => `$${(Number(r.entry_fee_cents || r.category_fee_cents || 0)/100).toFixed(2)}` },
     { key: "registered", label: "Date Registered", value: (r) => r.created_at ? new Date(r.created_at).toLocaleString("en-NZ", { timeZone: "Pacific/Auckland" }) : "" },
     { key: "payable", label: "Payable", value: (r) => `$${(Number(r.entry_fee_cents ?? r.category_fee_cents ?? 0)/100).toFixed(2)}` },

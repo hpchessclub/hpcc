@@ -55,6 +55,14 @@ export async function confirmTournamentPayment(s: any, session: any) {
   validateTournamentPayment(session,{...existing,payment_status:"paid",registration_status:"confirmed"});
   const refund=await checkTournamentRefund(s,session);
   if(refund)return {registration_id:id,...refund,email_status:"not_sent"};
+  if(existing.payment_status === "refunded") throw new Error("Refunded entry requires administrator review.");
+  if(existing.registration_status === "cancelled") {
+    // A delayed successful checkout must preserve the receipt without restoring the player.
+    const intent=typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+    check(await s.from("payment_records").upsert({id,payment_type:"tournament",reference_id:id,email:existing.email,amount_cents:session.amount_total,status:"paid",stripe_checkout_session_id:session.id,stripe_payment_intent_id:intent},{onConflict:"id",ignoreDuplicates:true}));
+    check(await s.from("tournament_registrations").update({payment_status:"paid",stripe_payment_intent_id:intent,updated_at:new Date().toISOString()}).eq("id",id).in("payment_status",["pending_payment","failed","expired","paid"]));
+    return {registration_id:id,status:"withdrawn",message:"This entry is withdrawn. Payment history is retained. Contact HPCC for the refund review status; do not pay again.",email_status:"not_sent"};
+  }
   validateTournamentPayment(session, existing);
   const paymentIntent = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || "";
   const registration = check(await s.from("tournament_registrations").update({ payment_status: "paid", registration_status: "confirmed", stripe_checkout_session_id: session.id, stripe_payment_intent_id: paymentIntent, updated_at: new Date().toISOString() }).eq("id", id).in("payment_status", ["pending_payment", "failed", "expired", "paid"]).neq("registration_status", "cancelled").select("*").single());
@@ -62,6 +70,7 @@ export async function confirmTournamentPayment(s: any, session: any) {
   const existingRecord = check(await s.from("payment_records").select("id").eq("stripe_checkout_session_id", session.id).limit(1).maybeSingle());
   if (!existingRecord) check(await s.from("payment_records").upsert({ id, payment_type: "tournament", reference_id: id, email: registration.email, amount_cents: session.amount_total, status: "paid", stripe_checkout_session_id: session.id, stripe_payment_intent_id: paymentIntent }, { onConflict: "id", ignoreDuplicates: true }));
   const tournament = check(await s.from("tournaments").select("*").eq("id", registration.tournament_id).single());
+  if (registration.registration_status === "cancelled") return {registration_id:id,status:"withdrawn",message:"This entry is withdrawn. Payment history is retained. Contact HPCC for the refund review status; do not pay again.",email_status:"not_sent"};
   const emailStatus = await tryTournamentConfirmation(s, registration, tournament);
   return { registration_id: id, status: "confirmed", email_status: emailStatus };
 }

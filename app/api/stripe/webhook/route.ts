@@ -1,3 +1,4 @@
+import {syncWithdrawalRefundEvent} from "@/lib/withdrawals";
 import {syncTournamentRefund} from "@/lib/tournamentRefund";
 import { confirmMembershipRenewal } from "@/lib/membershipRenewal";
 import { NextResponse } from "next/server";
@@ -18,6 +19,10 @@ export async function POST(req: Request) {
   try {
     const s = createSupabaseServiceClient();
     const session = event.data.object as any;
+    if(["refund.created","refund.updated","refund.failed"].includes(event.type)){
+      if(paymentConfiguration().production&&!event.livemode)throw new Error("Test refund in production");
+      await syncWithdrawalRefundEvent(s,session);return NextResponse.json({received:true});
+    }
     if(event.type==="charge.refunded"){
       if(paymentConfiguration().production&&!session.livemode)throw new Error("Test refund in production");
       await syncTournamentRefund(s,session);return NextResponse.json({received:true});
@@ -28,7 +33,7 @@ export async function POST(req: Request) {
       if (paymentConfiguration().production && !session.livemode) throw new Error("Test payment received in production");
       if (type === "tournament_registration") {
         const result = await confirmTournamentPayment(s, session);
-        if (result.status!=="refunded" && result.email_status !== "sent") throw new Error("Confirmation email pending; retry delivery");
+        if (!["refunded","withdrawn"].includes(result.status) && result.email_status !== "sent") throw new Error("Confirmation email pending; retry delivery");
       }
       if (type === "membership_renewal") {
         const result = await confirmMembershipRenewal(s, session);
@@ -42,7 +47,7 @@ export async function POST(req: Request) {
     if (["checkout.session.expired", "checkout.session.async_payment_failed"].includes(event.type)) {
       const expired = event.type === "checkout.session.expired";
       if (type === "tournament_registration") {
-        const { data: entry, error } = await s.from("tournament_registrations").update({ payment_status: expired ? "expired" : "failed", registration_status: expired ? "expired" : "pending_payment", updated_at: new Date().toISOString() }).eq("id", session.metadata.registration_id).eq("stripe_checkout_session_id", session.id).in("payment_status", ["pending_payment", "failed"]).select("*").maybeSingle();
+        const { data: entry, error } = await s.from("tournament_registrations").update({ payment_status: expired ? "expired" : "failed", registration_status: expired ? "expired" : "pending_payment", updated_at: new Date().toISOString() }).eq("id", session.metadata.registration_id).eq("stripe_checkout_session_id", session.id).in("payment_status", ["pending_payment", "failed"]).neq("registration_status","cancelled").select("*").maybeSingle();
         if (error) throw error;
         if (entry && !expired) {
           const { data: tournament, error } = await s.from("tournaments").select("*").eq("id", entry.tournament_id).single();
