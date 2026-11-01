@@ -37,11 +37,11 @@ export async function POST(req: Request) {
       }
       if (type === "membership_renewal") {
         const result = await confirmMembershipRenewal(s, session);
-        if (result.status!=="refunded" && result.email_status !== "sent") throw new Error("Renewal email pending; retry delivery");
+        if (!["refunded","withdrawn"].includes(result.status) && result.email_status !== "sent") throw new Error("Renewal email pending; retry delivery");
       }
       if (type === "membership") {
         const result = await confirmMembershipPayment(s, session);
-        if (result.status!=="refunded" && result.email_status !== "sent") throw new Error("Membership email pending; retry delivery");
+        if (!["refunded","withdrawn"].includes(result.status) && result.email_status !== "sent") throw new Error("Membership email pending; retry delivery");
       }
     }
     if (["checkout.session.expired", "checkout.session.async_payment_failed"].includes(event.type)) {
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
         if (error) throw error;
       }
       if (type === "membership" && expired) {
-        const { error } = await s.from("club_memberships").update({ payment_status: "expired", membership_status: "expired" }).eq("id", session.metadata.membership_id).eq("payment_status", "pending_payment");
+        const { error } = await s.from("club_memberships").update({ payment_status: "expired", membership_status: "expired" }).eq("id", session.metadata.membership_id).eq("payment_status", "pending_payment").neq("membership_status","cancelled");
         if (error) throw error;
       }
     }

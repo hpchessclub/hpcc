@@ -34,7 +34,7 @@ async function getRows(type: ReportType, role: string, params: FilterParams) {
     else if (sort === "fide_desc") q = q.order("fide_rating", { ascending: false, nullsFirst: false });
     else if (sort === "fide_asc") q = q.order("fide_rating", { ascending: true, nullsFirst: false });
     else q = q.order("created_at", { ascending: false });
-    return (await q).data || [];
+    const {data,error}=await q;if(error)throw Error('Member report could not be loaded.');const result=await attachWithdrawalReports(s,data||[],{refund_status:params.get('refund_status')},WITHDRAWAL_COLUMNS.some(key=>(params.get('columns')||'').split(',').includes(key)),'membership');return result.rows;
   }
 
   if (type === "tournament_registrations") {

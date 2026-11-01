@@ -17,6 +17,11 @@ export const paymentTrackingColumns:ReportColumn[]=[
 ];
 export const REPORT_COLUMNS: Record<ReportType, ReportColumn[]> = {
   members: [
+    {key:"withdrawn_at",label:"Withdrawn at",value:r=>r.withdrawn_at?new Date(r.withdrawn_at).toLocaleString("en-NZ",{timeZone:"Pacific/Auckland"}):""},
+    {key:"withdrawal_reason",label:"Withdrawal reason",value:r=>r.withdrawal_reason||""},
+    {key:"refund_status",label:"Refund status",value:r=>refundStatusLabel(r.refund_status)},
+    {key:"refund_due",label:"Refund due",value:r=>`NZ$${(Number(r.refund_due_cents||0)/100).toFixed(2)}`},
+    {key:"refund_reference",label:"Refund reference",value:r=>r.refund_reference||""},
     ...paymentTrackingColumns,
     { key: "name", label: "Name", value: (m) => `${m.first_name || ""} ${m.last_name || ""}`.trim() },
     { key: "payable", label: "Payable", value: (m) => `$${(Number(m.total_amount_cents || 0)/100).toFixed(2)}` },
@@ -25,7 +30,7 @@ export const REPORT_COLUMNS: Record<ReportType, ReportColumn[]> = {
     { key: "email", label: "Email", value: (m) => m.email },
     { key: "phone", label: "Phone", value: (m) => m.phone },
     { key: "membership_id", label: "Member ID", value: (m) => m.membership_id },
-    { key: "membership_status", label: "Status", value: (m) => m.payment_method==="bank_transfer"&&m.payment_status==="pending_payment"?"Tentative — bank transfer":memberStatusLabel(m.membership_status) },
+    { key: "membership_status", label: "Status", value: (m) => m.membership_status==="cancelled"?"Withdrawn / cancelled":m.payment_method==="bank_transfer"&&m.payment_status==="pending_payment"?"Tentative — bank transfer":memberStatusLabel(m.membership_status) },
     { key: "membership_end_date", label: "Expiry Date", value: (m) => m.membership_end_date },
     { key: "school", label: "School", value: (m) => m.school },
     { key: "parent_guardian", label: "Parent/Guardian", value: (m) => [m.parent_guardian_first_name, m.parent_guardian_last_name].filter(Boolean).join(" ") || m.parent_guardian_name },

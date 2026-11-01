@@ -48,6 +48,7 @@ export async function sendMembershipConfirmation(s: any, member: any, deliveryId
   }
 }
 export async function activateMembership(s: any, member: any) {
+  if(member.membership_status==="cancelled")return {status:"withdrawn",membership_id:member.membership_id,email_status:"not_sent"};
   if (!["paid", "manual_paid", "waived"].includes(member.payment_status)) throw new Error("Payment is not confirmed");
   const membershipId = await assignMembershipId(s, member);
   const parts = new Intl.DateTimeFormat("en", { timeZone: "Pacific/Auckland", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
@@ -57,6 +58,7 @@ export async function activateMembership(s: any, member: any) {
   const endDate = member.membership_end_date || `${year}-12-31`;
   const membershipStatus = endDate < today ? "expired" : "active";
   const updated = checked(await s.from("club_memberships").update({ membership_id: membershipId, membership_status: membershipStatus, membership_start_date: member.membership_start_date || today, membership_end_date: endDate, updated_at: new Date().toISOString() }).eq("id", member.id).select("*").single());
+  if(updated.membership_status==="cancelled")return {status:"withdrawn",membership_id:updated.membership_id,email_status:"not_sent"};
   let emailStatus = "failed";
   try { emailStatus = await sendMembershipConfirmation(s, updated); } catch {}
   return { status: membershipStatus === "active" ? "confirmed" : "expired", membership_id: membershipId, email_status: emailStatus };
@@ -67,7 +69,10 @@ export async function confirmMembershipPayment(s: any, session: any) {
   if (session.metadata?.type !== "membership" || session.mode !== "payment" || session.status !== "complete" || session.payment_status !== "paid" || session.currency !== "nzd" || session.amount_total !== Number(member.total_amount_cents) || session.amount_total <= 0) throw new Error("Membership payment mismatch");
   if (((config.production || config.mode === "live") && !session.livemode) || (config.mode === "test" && session.livemode)) throw new Error("Payment mode mismatch");
   if (member.stripe_checkout_session_id && member.stripe_checkout_session_id !== session.id) throw new Error("Checkout mismatch");
-  if (member.payment_status === "refunded" || member.membership_status === "cancelled") throw new Error("Administrator review required");
+  if (member.payment_status === "refunded") throw new Error("Administrator review required");
+  if(member.membership_status === "cancelled"){
+   const result=await s.rpc('hpcc_record_withdrawn_member_payment',{p_member:member.id,p_renewal:null,p_session:session.id,p_intent:typeof session.payment_intent==='string'?session.payment_intent:session.payment_intent?.id,p_amount:session.amount_total});if(result.error||!result.data)throw new Error('Withdrawn membership payment requires v4_12 setup/review.');return {status:'withdrawn',membership_id:member.membership_id,email_status:'not_sent',message:'Membership is withdrawn. Payment history retained; contact HPCC for review. Do not pay again.'};
+  }
   const pi = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || "";
   const paid = checked(await s.from("club_memberships").update({ payment_status: "paid", stripe_checkout_session_id: session.id, stripe_payment_intent_id: pi, updated_at: new Date().toISOString() }).eq("id", member.id).in("payment_status", ["pending_payment", "failed", "expired", "paid"]).neq("membership_status", "cancelled").select("*").single());
   const existingRecord = checked(await s.from("payment_records").select("id").eq("stripe_checkout_session_id", session.id).limit(1).maybeSingle());
