@@ -4,6 +4,11 @@ export async function syncTournamentRefund(s:any,charge:any){
  const intent=typeof charge.payment_intent==='string'?charge.payment_intent:charge.payment_intent?.id;if(!intent)return null;
  const {data:entries,error}=await s.from('tournament_registrations').select('*').eq('stripe_payment_intent_id',intent);if(error)throw new Error(error.message);
  if(!entries?.length)return null;
+ if(charge.currency!=='nzd'||entries.some((entry:any)=>Number(entry.entry_fee_cents)!==Number(charge.amount)))return null;
+ // A charge can include a pending refund. Only successful full-fee refunds change payment state.
+ const refunds=await getStripe().refunds.list({payment_intent:intent,limit:100});
+ const successful=refunds.data.filter((r:any)=>r.status==='succeeded'&&r.currency===charge.currency&&(typeof r.payment_intent==='string'?r.payment_intent:r.payment_intent?.id)===intent&&(typeof r.charge==='string'?r.charge:r.charge?.id)===charge.id);
+ if(refunds.has_more||successful.reduce((sum:number,r:any)=>sum+r.amount,0)!==Number(charge.amount))return null;
  for(const entry of entries||[]){const {error:updateError}=await s.from('tournament_registrations').update({payment_status:'refunded',registration_status:'cancelled',updated_at:new Date().toISOString()}).eq('id',entry.id).eq('stripe_payment_intent_id',intent);if(updateError)throw new Error(updateError.message);}
  for(const entry of entries||[]){const {data:ledger,error:readError}=await s.from('payment_records').select('id').eq('stripe_payment_intent_id',intent).eq('payment_type','tournament').limit(1).maybeSingle();if(readError)throw new Error(readError.message);if(!ledger){const {error:insertError}=await s.from('payment_records').upsert({id:entry.id,payment_type:'tournament',reference_id:entry.id,email:entry.email,amount_cents:entry.entry_fee_cents,status:'refunded',stripe_checkout_session_id:entry.stripe_checkout_session_id,stripe_payment_intent_id:intent},{onConflict:'id',ignoreDuplicates:true});if(insertError)throw new Error(insertError.message);}}
  const {error:ledgerError}=await s.from('payment_records').update({status:'refunded'}).eq('stripe_payment_intent_id',intent).eq('payment_type','tournament');if(ledgerError)throw new Error(ledgerError.message);

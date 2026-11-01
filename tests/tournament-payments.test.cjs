@@ -17,8 +17,8 @@ function fixture() {
   const tournament = { id: tid, title: 'Fixture tournament', tournament_type:'general_open', status: 'open', allow_public_registration: true, entry_fee_cents: 2000, category_options: [], max_players: 80 };
   const session = { id: 'cs_live_fixture', mode: 'payment', status: 'complete', payment_status: 'paid', livemode: true, currency: 'nzd', amount_total: 2000, payment_intent: 'pi_fixture', metadata: { type: 'tournament_registration', registration_id: id, tournament_id: tid } };
   let sends = [], failEmail = false, refundCharges=[];
-  const payment = load('lib/tournamentPayment.ts', { '@/lib/stripe': {getStripe:()=>({charges:{list:async()=>({data:refundCharges})}})}, '@/lib/email': { sendEmail: async input => { if (failEmail) throw Error('Email unavailable'); sends.push(input); } }, '@/lib/paymentConfig': config });
-  return { entry, tournament, session, db: new FakeDB(entry, tournament), payment, sends, setRefundCharges(value){refundCharges=value;}, setFailEmail(v) { failEmail = v; } };
+  const payment = load('lib/tournamentPayment.ts', { '@/lib/stripe': {getStripe:()=>({charges:{list:async()=>({data:refundCharges})},refunds:{list:async()=>({data:refundCharges.filter(c=>c.refunded).map(c=>({id:'re_fixture',status:'succeeded',currency:c.currency,charge:c.id,payment_intent:c.payment_intent,amount:c.amount}))})}})}, '@/lib/email': { sendEmail: async input => { if (failEmail) throw Error('Email unavailable'); sends.push(input); } }, '@/lib/paymentConfig': config });
+  return { entry, tournament, session, db: new FakeDB(entry, tournament), payment, sends, setRefundCharges(value){refundCharges=value.map(c=>({id:'ch_fixture',currency:'nzd',...c}));}, setFailEmail(v) { failEmail = v; } };
 }
 test('production checkout rejects test keys, missing webhook and unsafe return URLs', () => {
   const env = { STRIPE_SECRET_KEY: 'sk_live_fixture', STRIPE_WEBHOOK_SECRET: 'whsec_fixture', VERCEL_ENV: 'production', NEXT_PUBLIC_SITE_URL: 'https://www.hpchessclub.org' };

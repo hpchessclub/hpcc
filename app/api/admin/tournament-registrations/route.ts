@@ -8,13 +8,15 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { getStripe } from "@/lib/stripe";
 export async function DELETE(req: Request) {
   const admin = await getCurrentAdmin();
-  if (!admin || !canAccess(admin.profile.role, "tournament_registrations")) return NextResponse.json({error:"Not authorised"},{status:403});
+  if (!admin || !["admin","super_admin"].includes(admin.profile.role)) return NextResponse.json({error:"Admin or Super Admin required"},{status:403});
   try {
     const {id} = await req.json();
     if (typeof id !== "string" || !id.trim()) return NextResponse.json({error:"Select a registration."},{status:400});
     const s = createSupabaseServiceClient();
     const {data:entry,error} = await s.from("tournament_registrations").select("*").eq("id",id).single();
     if (error || !entry) return NextResponse.json({error:"Registration not found."},{status:404});
+    if(entry.stripe_payment_intent_id)return NextResponse.json({error:"Verify the linked Stripe payment before making changes."},{status:409});
+    if(entry.registration_status==="cancelled")return NextResponse.json({error:"Withdrawn registrations must be retained."},{status:409});
     if (!["pending_payment","unpaid","failed","expired"].includes(entry.payment_status)) return NextResponse.json({error:"Paid or refunded registrations must be retained for payment records. Contact the club administrator to cancel the entry."},{status:409});
     if(entry.payment_method==='bank_transfer')return NextResponse.json({error:'Bank-transfer references and instruction snapshots must be retained. Ask the club administrator to cancel the entry without deleting its history.'},{status:409});
     if (entry.stripe_checkout_session_id) {

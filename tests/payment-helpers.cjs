@@ -3,7 +3,7 @@ function load(path, deps = {}) {
   const output = ts.transpileModule(fs.readFileSync(path, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
   const exports = {};
   const quietConsole = { ...console, error() {} };
-  vm.runInNewContext(output, { exports, require: n => n in deps ? deps[n] : n.startsWith("@/") ? load(n.slice(2)+".ts", deps) : require(n), process, console: quietConsole, Date, URL, Buffer }, { filename: path });
+  vm.runInNewContext(output, { exports, require: n => n in deps ? deps[n] : n.startsWith("@/") ? load(n.slice(2)+".ts", deps) : require(n), process, console: quietConsole, Date, URL, URLSearchParams, Buffer }, { filename: path });
   return exports;
 }
 class FakeDB {

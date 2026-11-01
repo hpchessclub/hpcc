@@ -1,39 +1,53 @@
-# HPCC tournament withdrawals and refunds
-Revision 2026.11.02 · 2 November 2026
+# HPCC tournament withdrawal and full-refund tracking
+Revision 2026.11.02b · 2 November 2026
 
-## Setup
+## Activation (existing HPCC Supabase project only)
 
-Apply `supabase/migration_v4_10_withdrawals_refunds.sql` to the **existing HPCC Supabase project**. It is additive and repeatable. Do not run a reset/rebuild script. It creates a private review table, service-only RPCs, audit records and a trigger that keeps withdrawn entries cancelled. Deploying code alone does not apply this migration.
+Apply `supabase/migration_v4_10_withdrawals_refunds.sql` if not already installed, then `supabase/migration_v4_11_full_refund_tracking.sql`. Both are additive/repeatable. Do not reset/rebuild any tables. v4_11 keeps original registrations, receipts and earlier audit history. It normalizes review statuses, preserves a private snapshot of previous decisions, and disables obsolete financial functions. An old partial refund stays Pending for full-fee review; it is not silently promoted to Completed.
 
-Use HPCC's existing Stripe keys and webhook secret. For automatic asynchronous refund updates, subscribe the existing HPCC Stripe webhook to `refund.created`, `refund.updated` and `refund.failed` in addition to its existing checkout/charge events. The admin Check Stripe refund status action also retrieves the actual refund directly. No new credentials or bank details belong in source control.
+Use HPCC's existing Stripe configuration only. No new secrets or bank details are required. The website **does not issue Stripe refunds or send bank payments**. Refund completion is an explicit Admin/Super Admin verification; refund webhook events alone do not complete the withdrawal review. Existing signed charge/checkout reconciliation remains, and checks successful full refunds before changing payment state.
 
-## Withdraw an entry
+## Compact actions
 
-1. Open Tournament Registrations. Admin/Super Admin can choose **Withdraw entry** on an entry that is not already cancelled.
-2. Enter the player's reason and choose whether to request refund review. This is an admin-assisted request; no unauthenticated public withdrawal form is exposed.
-3. Confirm withdrawal. An unpaid open checkout is expired first; failed checks stop the action. The database saves a private original-registration/policy snapshot, actor and timestamp, then cancels the entry atomically.
-4. The player disappears from confirmed lists and paid-confirmed player exports, and payment reminders/resume are blocked. Original registration, member linkage, Stripe IDs, payment receipts and history remain.
+In Tournament Registrations, the green banknote icon is **Confirm cash / bank**. It remains available for eligible unpaid pending entries, independently of the amber **Withdraw / Refund** icon. Hover for tooltips; icons have accessible labels. Rows wrap action icons. Paid, refunded, withdrawn and bank-reference records do not expose a delete action. The server also rejects deletion of withdrawn records.
 
-## Review a refund
+Cash/bank confirmation retains Cash, Bank transfer and Other verified payment, required reference/note, full-payment acknowledgement and the approver/time audit. Completed/processing Stripe checkouts must use Stripe verification. Withdrawal does not replace confirmation.
 
-Open **Tournament Registrations → Withdrawals & refunds**. Filter by event or review status. Review the accepted policy snapshot, original payment, withdrawal reason and any previous refunds. Old registrations may have no recorded policy; do not invent one. The current event policy is shown separately and may differ from the accepted policy.
+## Withdraw a player
 
-- **Decline:** enter a reason. The entry remains withdrawn.
-- **Stripe:** enter the approved NZD amount (full or partial), acknowledge policy review, and explicitly confirm. The server validates the linked completed NZD checkout, registration, original amount, live/test mode and remaining refundable charge. It records the approval before contacting Stripe. Stripe returns money to the original payment method; the site never asks for card details. Pending refunds stay Processing until Stripe verifies success.
-- **Cash/bank/other:** pay the refund outside this website first, then record its amount, method, actual completed transaction reference and review note. A verified paid receipt and acknowledgement are required. Manual recording cannot be used for a linked Stripe checkout/payment.
+1. Admin/Super Admin clicks the amber Withdraw / Refund icon on a registration.
+2. Read the applicable cancellation/refund policy. Accepted policy text is preferred; current event policy/original arrangements are explicitly identified when no accepted snapshot exists. A missing policy is not invented.
+3. Enter a reason and explicitly acknowledge policy review. Choose **Full entry fee due** or **No refund due**. Unpaid/free entries always have zero due and Not required status, regardless of any client-supplied amount.
+4. Confirm withdrawal. An unpaid open checkout is expired first. A completed/processing checkout with unverified payment is blocked until Stripe verification. The entry becomes cancelled, is excluded from confirmed/public lists and confirmed-player exports, and cannot resume payment or receive reminders. The original registration/member linkage, payment identifiers, policy snapshot and receipts remain.
 
-Approvals record the reviewing admin and time, approved amount, method, note and refund reference/Stripe refund ID. The original payment receipt amount is retained. Partial refunds are tracked separately and do not mark the original payment fully refunded. A verified full refund marks payment Refunded; the registration remains cancelled.
+Repeated requests reuse the same withdrawal and do not add duplicate audit records. Database guards and webhook checks prevent late payment/expiry callbacks restoring a withdrawn entry.
 
-## Retry and reconciliation
+## Full-fee refund tracking
 
-Repeated withdrawal requests reuse the existing record. Stripe uses one stable idempotency key per approved refund and checks existing refund metadata before creation. If an API response is lost, use **Check Stripe refund status**. Do not make a second refund in Stripe just because the browser reports a timeout.
+Refund review is independent of registration and payment status:
 
-An uncertain request older than 15 minutes will not create another Stripe refund. If no matching refund can be found, or Stripe reports failed/cancelled, a technical administrator must reconcile the request with Stripe. The site deliberately does not automatically issue a replacement. Refund requests already completed/declined are not reopened by this workflow.
+- **Pending:** a full entry fee is due; completion has not been verified. The original payment remains recorded as paid until a successful refund is verified.
+- **Completed:** the full fee was verified in Stripe or an admin recorded its completed external return. Approver, timestamps, method, full amount and references are retained. Original receipt amounts are not overwritten.
+- **Not required:** no refund is due, including unpaid/free withdrawals. No refund amount is created.
 
-Delayed successful checkout callbacks record payment without re-confirming or emailing a withdrawn player. The database trigger also prevents older clients/webhooks restoring confirmed status. Fully refunded charges retain their existing reconciliation behavior. Public player exports remain limited to the existing safe player fields; private withdrawal/policy/contact/payment details are not added.
+### Stripe
 
-## Limits and validation
+Issue the refund in the HPCC Stripe dashboard first, to the original payment method. Then use **Verify full refund in Stripe** in HPCC. This action only reads Stripe and records verification; it never creates a refund.
 
-This workflow covers tournament entries, not membership cancellation. It does not automatically email a withdrawal/refund notice; contact the player separately through the club's normal process. A saved refund means Stripe verified success or an admin explicitly recorded a completed external refund, not a promise of bank settlement time. No real refunds, emails, deletions or withdrawals are needed for tests.
+HPCC verifies the linked checkout/payment intent, registration/tournament metadata, original amount, NZD currency, live/test mode, fully refunded charge and successful refund records totaling exactly the full fee. Partial, pending, failed, mismatched or ambiguous refunds do not complete the workflow. A Stripe-linked payment cannot be completed as a cash/bank refund. Repeating verification does not create another receipt/refund/audit entry.
 
-Run `node --test tests/*.test.cjs tests/*.test.mjs`, `npx tsc --noEmit` and `npm run build`. The SQL tests use isolated PGlite fixtures and apply the migration twice. API/Stripe tests use fake payments only.
+### Cash / bank / other verified payment
+
+Return the full fee outside the website first. Then choose the method, provide the actual transaction/receipt reference and note, and acknowledge that the **full fee** was returned. The server requires a verified paid receipt for that amount and rejects Stripe-linked records. HPCC records completion; it does not move money.
+
+## Reports and exports
+
+Tournament Registrations and the admin Player / Vega report offer registration-status and refund-status filters. To view withdrawn players in the player report choose **All registrations**, then Withdrawn/cancelled. Public lists continue to include only paid confirmed players and expose no new private data.
+
+Choose export columns **Withdrawn at, Withdrawal reason, Refund status, Refund due, Refund reference** in Tournament Registrations. CSV and PDF use the same enrichment and filters as the report. Withdrawal/refund status appears on the player row. If SQL is missing, refund filters/exports fail clearly rather than returning an unfiltered report; ordinary registration and cash/bank actions remain available.
+
+This is an admin-assisted tournament workflow. It does not cancel memberships or send withdrawal/refund emails. Contact the participant through normal club processes. Do not use real registrations, refunds, deletions or emails for tests.
+
+## Validation
+
+Run `node --test tests/*.test.cjs tests/*.test.mjs`, `npx tsc --noEmit`, and `npm run build`. Isolated PGlite tests apply migrations twice and test private access, full-only completion, zero unpaid refund due, audit/receipt retry safety and late-event cancellation guards. Stripe tests use fixtures and assert no refund-creation calls.

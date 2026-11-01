@@ -1,3 +1,4 @@
+import {attachWithdrawalReports,WITHDRAWAL_COLUMNS} from "@/lib/withdrawalReports";
 import { applyMemberSearch } from "@/lib/memberSearch";
 import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/auth";
@@ -49,8 +50,9 @@ async function getRows(type: ReportType, role: string, params: FilterParams) {
     else if (sort === "nzcf_desc") q = q.order("nzcf_rating", { ascending: false, nullsFirst: false });
     else if (sort === "fide_desc") q = q.order("fide_rating", { ascending: false, nullsFirst: false });
     else q = q.order("created_at", { ascending: false });
-    const rows = (await q).data || [];
-    return rows.map((r: any) => ({ ...r, tournament_title: r.tournaments?.title }));
+    const {data,error}=await q;if(error)throw new Error('Unable to load registration report.');
+    const result=await attachWithdrawalReports(s,data||[],{registration_status:params.get('registration_status'),refund_status:params.get('refund_status')},WITHDRAWAL_COLUMNS.some(key=>(params.get('columns')||'').split(',').includes(key)));
+    return result.rows.map((r: any) => ({ ...r, tournament_title: r.tournaments?.title }));
   }
 
   if (type === "absences") {

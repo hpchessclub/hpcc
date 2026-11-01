@@ -1,4 +1,6 @@
-import WithdrawalActions from "@/components/admin/WithdrawalActions";
+import {registrationActionPermissions} from "@/lib/registrationActions";
+import WithdrawalFilters from "@/components/admin/WithdrawalFilters";
+import {attachWithdrawalReports,refundStatusLabel,WITHDRAWAL_COLUMNS} from "@/lib/withdrawalReports";
 import PaymentReminders from "@/components/admin/PaymentReminders";
 import { editableEntry } from "@/lib/tournamentEntryEditing";
 import PdfPreview from "@/components/admin/PdfPreview";
@@ -10,7 +12,7 @@ import { formatMoney } from "@/lib/format";
 import { REPORT_COLUMNS, selectedColumnKeys, selectedColumns, buildReportQuery, buildReportPageQuery } from "@/lib/reports";
 
 function formBase(sp: any) {
-  return { sort: sp.sort, payment_status: sp.payment_status, tournament_id: sp.tournament_id };
+  return { sort: sp.sort, payment_status: sp.payment_status, tournament_id: sp.tournament_id,registration_status:sp.registration_status,refund_status:sp.refund_status };
 }
 
 export default async function RegistrationsPage({ searchParams }: { searchParams: Promise<any> }) {
@@ -30,7 +32,8 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
   else q = q.order("created_at", { ascending: false });
 
   const { data } = await q;
-  const rows = data || [];
+  let rows:any[]=data||[];let withdrawalWarning='';
+  try{const result=await attachWithdrawalReports(s,rows,sp,keys.some(k=>WITHDRAWAL_COLUMNS.includes(k)));rows=result.rows;withdrawalWarning=result.warning;}catch(e){rows=[];withdrawalWarning=e instanceof Error?e.message:'Withdrawal report unavailable.';}
   const { data: tournaments } = await s.from("tournaments").select("id,title").order("title");
   const paid = rows.filter((r: any) => r.payment_status === "paid" && r.registration_status === "confirmed").length;
   const pending = rows.filter((r: any) => r.payment_status === "pending_payment").length;
@@ -48,10 +51,12 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
       <p className="mt-2 text-stone-600">Choose filters and columns before exporting. Public entries show only paid and confirmed players. Tentative bank transfers reserve no place. Choose Payment Method, Bank Reference, Last Payment Reminder and Payment Status Explanation in report columns.</p>
 
       {["admin","super_admin"].includes(admin.profile.role)&&<PaymentReminders key={sp.tournament_id||"all"} tournamentId={sp.tournament_id}/>}<PaymentDiagnostics />
+      {withdrawalWarning&&<p role="alert" className="mt-4 text-amber-800">{withdrawalWarning}</p>}
       <form className="card mt-5 space-y-5 p-5">
         <div className="grid gap-3 md:grid-cols-4">
           <select name="tournament_id" defaultValue={sp.tournament_id || ""} className="admin-input"><option value="">All tournaments</option>{(tournaments || []).map((t: any) => <option key={t.id} value={t.id}>{t.title}</option>)}</select>
           <select name="payment_status" defaultValue={sp.payment_status || ""} className="admin-input"><option value="">All payment statuses</option><option value="paid">Paid</option><option value="pending_payment">Pending</option><option value="failed">Failed</option><option value="refunded">Refunded</option><option value="expired">Expired</option></select>
+          <WithdrawalFilters registrationStatus={sp.registration_status} refundStatus={sp.refund_status}/>
           <select name="sort" defaultValue={sort} className="admin-input"><option value="created_at_desc">Newest</option><option value="nzcf_desc">NZCF high-low</option><option value="fide_desc">FIDE high-low</option></select>
           <button className="btn-primary py-2">Preview Report</button>
         </div>
@@ -67,7 +72,7 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
 
       <section className="mt-6 grid gap-4 md:grid-cols-4"><div className="card p-4"><p className="text-xs font-bold uppercase text-stone-500">Total entries</p><p className="mt-2 text-2xl font-extrabold">{rows.length}</p></div><div className="card p-4"><p className="text-xs font-bold uppercase text-stone-500">Confirmed paid</p><p className="mt-2 text-2xl font-extrabold text-green-700">{paid}</p></div><div className="card p-4"><p className="text-xs font-bold uppercase text-stone-500">Pending payment</p><p className="mt-2 text-2xl font-extrabold text-amber-700">{pending}</p></div><div className="card p-4"><p className="text-xs font-bold uppercase text-stone-500">Payments received</p><p className="mt-2 text-2xl font-extrabold">{formatMoney(totalAmount)}</p></div></section>
 
-      <section className="card mt-6 overflow-hidden"><div className="border-b bg-white p-5"><h2 className="text-xl font-extrabold">Report Preview - Tournament Registrations</h2><p className="mt-1 text-sm text-stone-500">Payment shows Paid or Unpaid. Waived fees count as Paid.</p></div><div className="overflow-x-auto"><table className="w-full min-w-[1250px] table-fixed text-sm"><thead className="bg-stone-100 text-left"><tr>{cols.map((c) => <th key={c.key} className="p-3">{c.label}</th>)}<th className="w-[160px] p-3">Actions</th></tr></thead><tbody>{rows.length === 0 && <tr><td colSpan={cols.length + 1} className="p-5 text-stone-600">No tournament registrations match these filters.</td></tr>}{rows.map((r: any) => <tr key={r.id} className="border-t">{cols.map((c) => <td key={c.key} className={`p-3 break-words align-top ${c.key === "balance" ? "text-red-600" : c.key === "registered" ? "text-orange-600" : ""}`}>{c.key === "player" ? <><span className="font-semibold text-green-700">{r.last_name}, {r.first_name}</span><br/><span className="text-stone-500">{r.membership_id || "Non-member"}</span></> : c.value(r)}</td>)}<td className="p-3"><RegistrationRowActions canConfirm={["admin","super_admin"].includes(admin.profile.role)&&["pending_payment","failed","expired"].includes(r.payment_status)} id={r.id} email={r.email} initial={editableEntry(r)} tournament={r.tournaments?.title || "Tournament"} />{["admin","super_admin"].includes(admin.profile.role)&&r.registration_status!=="cancelled"&&<div className="mt-2"><WithdrawalActions registrationId={r.id} player={`${r.first_name} ${r.last_name}`}/></div>}{r.registration_status==="cancelled"&&<a className="text-xs underline" href={`/club-admin/tournament-registrations/withdrawals?tournament_id=${r.tournament_id}`}>Review withdrawal/refund</a>}</td></tr>)}</tbody></table></div></section>
+      <section className="card mt-6 overflow-hidden"><div className="border-b bg-white p-5"><h2 className="text-xl font-extrabold">Report Preview - Tournament Registrations</h2><p className="mt-1 text-sm text-stone-500">Payment shows Paid or Unpaid. Waived fees count as Paid.</p></div><div className="overflow-x-auto"><table className="w-full min-w-[1250px] table-fixed text-sm"><thead className="bg-stone-100 text-left"><tr>{cols.map((c) => <th key={c.key} className="p-3">{c.label}</th>)}<th className="w-[160px] p-3">Actions</th></tr></thead><tbody>{rows.length === 0 && <tr><td colSpan={cols.length + 1} className="p-5 text-stone-600">No tournament registrations match these filters.</td></tr>}{rows.map((r: any) => <tr key={r.id} className="border-t">{cols.map((c) => <td key={c.key} className={`p-3 break-words align-top ${c.key === "balance" ? "text-red-600" : c.key === "registered" ? "text-orange-600" : ""}`}>{c.key === "player" ? <><span className="font-semibold text-green-700">{r.last_name}, {r.first_name}</span><br/><span className="text-stone-500">{r.membership_id || "Non-member"}</span>{r.registration_status==="cancelled"&&<p className="mt-1 text-xs font-bold text-amber-800">Withdrawn / cancelled · Refund: {refundStatusLabel(r.refund_status)}</p>}</> : c.value(r)}</td>)}<td className="p-3"><RegistrationRowActions {...registrationActionPermissions(admin.profile.role,r)} id={r.id} email={r.email} initial={editableEntry(r)} tournament={r.tournaments?.title || "Tournament"} /></td></tr>)}</tbody></table></div></section>
 
 
     </div>

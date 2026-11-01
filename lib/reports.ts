@@ -1,3 +1,4 @@
+import {refundStatusLabel} from "@/lib/withdrawalReports";
 export function memberStatusLabel(value: unknown) { return value === "pending_payment" ? "Pending" : String(value || "").replace(/_/g, " "); }
 
 export type ReportType = "members" | "tournament_registrations" | "absences" | "payments";
@@ -37,6 +38,11 @@ export const REPORT_COLUMNS: Record<ReportType, ReportColumn[]> = {
     { key: "registered", label: "Date Registered", value: (m) => m.created_at ? new Date(m.created_at).toLocaleString("en-NZ", { timeZone: "Pacific/Auckland" }) : "" }
   ],
   tournament_registrations: [
+    {key:"withdrawn_at",label:"Withdrawn at",value:r=>r.withdrawn_at?new Date(r.withdrawn_at).toLocaleString("en-NZ",{timeZone:"Pacific/Auckland"}):""},
+    {key:"withdrawal_reason",label:"Withdrawal reason",value:r=>r.withdrawal_reason||""},
+    {key:"refund_status",label:"Refund status",value:r=>refundStatusLabel(r.refund_status)},
+    {key:"refund_due",label:"Refund due",value:r=>`NZ$${(Number(r.refund_due_cents||0)/100).toFixed(2)}`},
+    {key:"refund_reference",label:"Refund reference",value:r=>r.refund_reference||""},
     ...paymentTrackingColumns,
     {key:"gender",label:"Gender",value:r=>r.gender||""},
     { key: "dob", label: "DOB", value: (r) => r.date_of_birth ? String(r.date_of_birth).slice(0, 10) : "" },
